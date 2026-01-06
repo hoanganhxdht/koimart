@@ -732,8 +732,6 @@
                 useBarCodeDetectorIfSupported: false
             },
             videoConstraints: {
-                width: { min: 640, ideal: 1280, max: 1920 },
-                height: { min: 480, ideal: 720, max: 1080 },
                 facingMode: "environment"
             },
             formatsToSupport: [
@@ -757,6 +755,7 @@
                 <p class="text-muted mb-0 mt-2">Đưa mã vạch vào khung hình...</p>
             `;
         }).catch((err) => {
+            alert("Lỗi camera: " + err);
             document.getElementById('scanner-status').innerHTML = `
                 <i class="bi bi-exclamation-triangle text-warning" style="font-size: 1.5rem;"></i>
                 <p class="text-danger mb-0 mt-2">Không thể truy cập camera: ${err}</p>
