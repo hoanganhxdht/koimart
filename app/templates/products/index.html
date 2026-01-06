@@ -1,6 +1,57 @@
 {% extends 'base.html' %}
 
-{% block title %}Sản phẩm - MiniMart{% endblock %}
+{% block title %}Sản phẩm - KOI MART{% endblock %}
+
+{% block extra_css %}
+<style>
+    .bulk-actions {
+        display: none;
+        background: var(--bg-card);
+        border-radius: var(--radius-md);
+        padding: 12px 16px;
+        margin-bottom: 15px;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border-color);
+        animation: slideDown 0.3s ease;
+    }
+
+    .bulk-actions.show {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .checkbox-cell {
+        width: 40px;
+        text-align: center;
+    }
+
+    .form-check-input {
+        cursor: pointer;
+    }
+
+    .form-check-input:checked {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+
+    tr.selected {
+        background-color: rgba(34, 197, 94, 0.1) !important;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="top-bar">
@@ -12,6 +63,21 @@
         <a href="{{ url_for('products.create') }}" class="btn btn-primary">
             <i class="bi bi-plus-lg me-1"></i>Thêm sản phẩm
         </a>
+    </div>
+</div>
+
+<!-- Bulk Actions Bar -->
+<div class="bulk-actions" id="bulkActions">
+    <div class="d-flex align-items-center gap-3">
+        <span class="text-muted">
+            Đã chọn <strong id="selectedCount">0</strong> sản phẩm
+        </span>
+        <button type="button" class="btn btn-danger btn-sm" onclick="bulkDelete()">
+            <i class="bi bi-trash me-1"></i>Xóa đã chọn
+        </button>
+        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearSelection()">
+            <i class="bi bi-x-lg me-1"></i>Bỏ chọn
+        </button>
     </div>
 </div>
 
@@ -40,9 +106,13 @@
     </div>
     <div class="card-body">
         <div class="table-responsive">
-            <table class="table table-hover">
+            <table class="table table-hover" id="productsTable">
                 <thead>
                     <tr>
+                        <th class="checkbox-cell">
+                            <input type="checkbox" class="form-check-input" id="selectAll"
+                                onchange="toggleSelectAll(this)" title="Chọn tất cả">
+                        </th>
                         <th>Mã vạch</th>
                         <th>Tên sản phẩm</th>
                         <th>Danh mục</th>
@@ -55,7 +125,11 @@
                 </thead>
                 <tbody>
                     {% for product in products.items %}
-                    <tr>
+                    <tr data-id="{{ product.id }}">
+                        <td class="checkbox-cell">
+                            <input type="checkbox" class="form-check-input product-checkbox" value="{{ product.id }}"
+                                onchange="updateSelection()">
+                        </td>
                         <td><code>{{ product.barcode or '-' }}</code></td>
                         <td class="fw-semibold">{{ product.name }}</td>
                         <td>{{ product.category.name if product.category else '-' }}</td>
@@ -84,7 +158,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="8" class="text-center text-muted py-4">Không có sản phẩm</td>
+                        <td colspan="9" class="text-center text-muted py-4">Không có sản phẩm</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -110,4 +184,159 @@
         {% endif %}
     </div>
 </div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Xác nhận xóa</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa <strong id="deleteCount">0</strong> sản phẩm đã chọn?</p>
+                <p class="text-muted small mb-0">Lưu ý: Sản phẩm sẽ được chuyển sang trạng thái "Ngừng bán", không xóa
+                    hoàn toàn.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger" onclick="confirmBulkDelete()">
+                    <i class="bi bi-trash me-1"></i>Xóa
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let selectedProducts = new Set();
+    let deleteModal;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    });
+
+    function toggleSelectAll(checkbox) {
+        const checkboxes = document.querySelectorAll('.product-checkbox');
+        checkboxes.forEach(cb => {
+            cb.checked = checkbox.checked;
+            const row = cb.closest('tr');
+            if (checkbox.checked) {
+                selectedProducts.add(parseInt(cb.value));
+                row.classList.add('selected');
+            } else {
+                selectedProducts.delete(parseInt(cb.value));
+                row.classList.remove('selected');
+            }
+        });
+        updateBulkActionsBar();
+    }
+
+    function updateSelection() {
+        selectedProducts.clear();
+        const checkboxes = document.querySelectorAll('.product-checkbox');
+        let allChecked = true;
+
+        checkboxes.forEach(cb => {
+            const row = cb.closest('tr');
+            if (cb.checked) {
+                selectedProducts.add(parseInt(cb.value));
+                row.classList.add('selected');
+            } else {
+                allChecked = false;
+                row.classList.remove('selected');
+            }
+        });
+
+        document.getElementById('selectAll').checked = allChecked && checkboxes.length > 0;
+        updateBulkActionsBar();
+    }
+
+    function updateBulkActionsBar() {
+        const bulkActions = document.getElementById('bulkActions');
+        const selectedCount = document.getElementById('selectedCount');
+
+        selectedCount.textContent = selectedProducts.size;
+
+        if (selectedProducts.size > 0) {
+            bulkActions.classList.add('show');
+        } else {
+            bulkActions.classList.remove('show');
+        }
+    }
+
+    function clearSelection() {
+        selectedProducts.clear();
+        document.querySelectorAll('.product-checkbox').forEach(cb => {
+            cb.checked = false;
+            cb.closest('tr').classList.remove('selected');
+        });
+        document.getElementById('selectAll').checked = false;
+        updateBulkActionsBar();
+    }
+
+    function bulkDelete() {
+        if (selectedProducts.size === 0) return;
+        document.getElementById('deleteCount').textContent = selectedProducts.size;
+        deleteModal.show();
+    }
+
+    function confirmBulkDelete() {
+        const ids = Array.from(selectedProducts);
+
+        fetch('{{ url_for("products.bulk_delete") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ product_ids: ids })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    deleteModal.hide();
+                    // Remove deleted rows from table
+                    ids.forEach(id => {
+                        const row = document.querySelector(`tr[data-id="${id}"]`);
+                        if (row) {
+                            row.style.animation = 'fadeOut 0.3s ease';
+                            setTimeout(() => row.remove(), 300);
+                        }
+                    });
+                    clearSelection();
+
+                    // Show success message
+                    showToast(`Đã xóa ${data.deleted_count} sản phẩm thành công!`, 'success');
+                } else {
+                    showToast('Có lỗi xảy ra: ' + data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                showToast('Lỗi kết nối!', 'danger');
+            });
+    }
+
+    function showToast(message, type) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.innerHTML = `${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+        document.querySelector('.main-content').insertBefore(alertDiv, document.querySelector('.main-content').firstChild);
+
+        setTimeout(() => alertDiv.remove(), 5000);
+    }
+</script>
+<style>
+    @keyframes fadeOut {
+        from {
+            opacity: 1;
+        }
+
+        to {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+    }
+</style>
 {% endblock %}

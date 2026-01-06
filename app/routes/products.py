@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, flash, redirect, url_for
+from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify
 from flask_login import login_required, current_user
 from app import db
 from app.models import Product, Category, InventoryLog
@@ -92,6 +92,36 @@ def delete(id):
     db.session.commit()
     flash('Đã xóa sản phẩm.', 'success')
     return redirect(url_for('products.index'))
+
+@products_bp.route('/bulk-delete', methods=['POST'])
+@login_required
+def bulk_delete():
+    """Xóa nhiều sản phẩm cùng lúc (soft delete)"""
+    try:
+        data = request.get_json()
+        product_ids = data.get('product_ids', [])
+        
+        if not product_ids:
+            return jsonify({'success': False, 'message': 'Không có sản phẩm nào được chọn'}), 400
+        
+        deleted_count = 0
+        for product_id in product_ids:
+            product = Product.query.get(product_id)
+            if product:
+                product.is_active = False
+                deleted_count += 1
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True, 
+            'deleted_count': deleted_count,
+            'message': f'Đã xóa {deleted_count} sản phẩm'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 @products_bp.route('/categories')
 @login_required
