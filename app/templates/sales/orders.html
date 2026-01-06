@@ -1,18 +1,97 @@
 {% extends 'base.html' %}
 
-{% block title %}Danh sách hóa đơn - MiniMart{% endblock %}
+{% block title %}Danh sách hóa đơn - KOI MART{% endblock %}
+
+{% block extra_css %}
+<style>
+    .bulk-actions {
+        display: none;
+        background: var(--bg-card);
+        border-radius: var(--radius-md);
+        padding: 12px 16px;
+        margin-bottom: 15px;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border-color);
+        animation: slideDown 0.3s ease;
+    }
+
+    .bulk-actions.show {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .checkbox-cell {
+        width: 40px;
+        text-align: center;
+    }
+
+    .form-check-input {
+        cursor: pointer;
+    }
+
+    tr.selected {
+        background-color: rgba(239, 68, 68, 0.1) !important;
+    }
+
+    .delete-single-btn {
+        opacity: 0.7;
+        transition: opacity 0.2s;
+    }
+
+    .delete-single-btn:hover {
+        opacity: 1;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="top-bar">
     <h4 class="mb-0">Danh sách hóa đơn</h4>
+    <div>
+        <a href="{{ url_for('sales.pos') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>Tạo đơn mới
+        </a>
+    </div>
+</div>
+
+<!-- Bulk Actions Bar -->
+<div class="bulk-actions" id="bulkActions">
+    <div class="d-flex align-items-center gap-3">
+        <span class="text-muted">
+            Đã chọn <strong id="selectedCount">0</strong> hóa đơn
+        </span>
+        <button type="button" class="btn btn-danger btn-sm" onclick="bulkDeleteOrders()">
+            <i class="bi bi-trash me-1"></i>Xóa đã chọn
+        </button>
+        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearSelection()">
+            <i class="bi bi-x-lg me-1"></i>Bỏ chọn
+        </button>
+    </div>
 </div>
 
 <div class="card">
     <div class="card-body">
         <div class="table-responsive">
-            <table class="table table-hover">
+            <table class="table table-hover" id="ordersTable">
                 <thead>
                     <tr>
+                        <th class="checkbox-cell">
+                            <input type="checkbox" class="form-check-input" id="selectAll"
+                                onchange="toggleSelectAll(this)" title="Chọn tất cả">
+                        </th>
                         <th>Mã HĐ</th>
                         <th>Thời gian</th>
                         <th>Nhân viên</th>
@@ -25,7 +104,11 @@
                 </thead>
                 <tbody>
                     {% for order in orders.items %}
-                    <tr>
+                    <tr data-id="{{ order.id }}">
+                        <td class="checkbox-cell">
+                            <input type="checkbox" class="form-check-input order-checkbox" value="{{ order.id }}"
+                                onchange="updateSelection()">
+                        </td>
                         <td><a href="{{ url_for('sales.order_detail', id=order.id) }}" class="fw-semibold">{{
                                 order.order_code }}</a></td>
                         <td>{{ order.created_at.strftime('%H:%M %d/%m/%Y') }}</td>
@@ -51,15 +134,22 @@
                             {% endif %}
                         </td>
                         <td>
-                            <a href="{{ url_for('sales.print_order', id=order.id) }}"
-                                class="btn btn-sm btn-outline-secondary" target="_blank">
-                                <i class="bi bi-printer"></i>
-                            </a>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('sales.print_order', id=order.id) }}"
+                                    class="btn btn-outline-secondary" target="_blank" title="In hóa đơn">
+                                    <i class="bi bi-printer"></i>
+                                </a>
+                                <button type="button" class="btn btn-outline-danger delete-single-btn"
+                                    onclick="deleteSingleOrder({{ order.id }}, '{{ order.order_code }}')"
+                                    title="Xóa hóa đơn">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="8" class="text-center text-muted py-4">Chưa có hóa đơn</td>
+                        <td colspan="9" class="text-center text-muted py-4">Chưa có hóa đơn</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -83,4 +173,177 @@
         {% endif %}
     </div>
 </div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Xác nhận xóa</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="deleteMessage">Bạn có chắc chắn muốn xóa hóa đơn này?</p>
+                <div class="alert alert-warning small mb-0">
+                    <i class="bi bi-info-circle me-1"></i>
+                    <strong>Lưu ý:</strong> Hóa đơn đã xóa sẽ không thể khôi phục.
+                    Tồn kho sản phẩm sẽ được hoàn lại tự động.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="bi bi-trash me-1"></i>Xóa
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let selectedOrders = new Set();
+    let deleteModal;
+    let pendingDeleteIds = [];
+
+    document.addEventListener('DOMContentLoaded', function () {
+        deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    });
+
+    function toggleSelectAll(checkbox) {
+        const checkboxes = document.querySelectorAll('.order-checkbox');
+        checkboxes.forEach(cb => {
+            cb.checked = checkbox.checked;
+            const row = cb.closest('tr');
+            if (checkbox.checked) {
+                selectedOrders.add(parseInt(cb.value));
+                row.classList.add('selected');
+            } else {
+                selectedOrders.delete(parseInt(cb.value));
+                row.classList.remove('selected');
+            }
+        });
+        updateBulkActionsBar();
+    }
+
+    function updateSelection() {
+        selectedOrders.clear();
+        const checkboxes = document.querySelectorAll('.order-checkbox');
+        let allChecked = true;
+
+        checkboxes.forEach(cb => {
+            const row = cb.closest('tr');
+            if (cb.checked) {
+                selectedOrders.add(parseInt(cb.value));
+                row.classList.add('selected');
+            } else {
+                allChecked = false;
+                row.classList.remove('selected');
+            }
+        });
+
+        document.getElementById('selectAll').checked = allChecked && checkboxes.length > 0;
+        updateBulkActionsBar();
+    }
+
+    function updateBulkActionsBar() {
+        const bulkActions = document.getElementById('bulkActions');
+        const selectedCount = document.getElementById('selectedCount');
+
+        selectedCount.textContent = selectedOrders.size;
+
+        if (selectedOrders.size > 0) {
+            bulkActions.classList.add('show');
+        } else {
+            bulkActions.classList.remove('show');
+        }
+    }
+
+    function clearSelection() {
+        selectedOrders.clear();
+        document.querySelectorAll('.order-checkbox').forEach(cb => {
+            cb.checked = false;
+            cb.closest('tr').classList.remove('selected');
+        });
+        document.getElementById('selectAll').checked = false;
+        updateBulkActionsBar();
+    }
+
+    function deleteSingleOrder(orderId, orderCode) {
+        pendingDeleteIds = [orderId];
+        document.getElementById('deleteMessage').innerHTML =
+            `Bạn có chắc chắn muốn xóa hóa đơn <strong>${orderCode}</strong>?`;
+        document.getElementById('confirmDeleteBtn').onclick = confirmDelete;
+        deleteModal.show();
+    }
+
+    function bulkDeleteOrders() {
+        if (selectedOrders.size === 0) return;
+        pendingDeleteIds = Array.from(selectedOrders);
+        document.getElementById('deleteMessage').innerHTML =
+            `Bạn có chắc chắn muốn xóa <strong>${selectedOrders.size}</strong> hóa đơn đã chọn?`;
+        document.getElementById('confirmDeleteBtn').onclick = confirmDelete;
+        deleteModal.show();
+    }
+
+    function confirmDelete() {
+        fetch('{{ url_for("sales.delete_orders") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ order_ids: pendingDeleteIds })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    deleteModal.hide();
+                    // Remove deleted rows from table
+                    pendingDeleteIds.forEach(id => {
+                        const row = document.querySelector(`tr[data-id="${id}"]`);
+                        if (row) {
+                            row.style.animation = 'fadeOut 0.3s ease';
+                            setTimeout(() => row.remove(), 300);
+                        }
+                    });
+                    clearSelection();
+
+                    // Show success message
+                    showToast(`Đã xóa ${data.deleted_count} hóa đơn thành công!`, 'success');
+                } else {
+                    showToast('Có lỗi xảy ra: ' + data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                showToast('Lỗi kết nối!', 'danger');
+            });
+    }
+
+    function showToast(message, type) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.style.position = 'fixed';
+        alertDiv.style.top = '20px';
+        alertDiv.style.right = '20px';
+        alertDiv.style.zIndex = '9999';
+        alertDiv.style.minWidth = '300px';
+        alertDiv.innerHTML = `${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+        document.body.appendChild(alertDiv);
+
+        setTimeout(() => alertDiv.remove(), 5000);
+    }
+</script>
+<style>
+    @keyframes fadeOut {
+        from {
+            opacity: 1;
+        }
+
+        to {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+    }
+</style>
 {% endblock %}

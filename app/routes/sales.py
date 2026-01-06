@@ -160,3 +160,50 @@ def issue_einvoice(id):
     flash(f'Đã phát hành hoá đơn điện tử cho đơn hàng {order.order_code}', 'success')
     return redirect(url_for('sales.einvoices'))
 
+@sales_bp.route('/delete-orders', methods=['POST'])
+@login_required
+def delete_orders():
+    """Xóa hóa đơn (hoàn lại tồn kho)"""
+    try:
+        data = request.get_json()
+        order_ids = data.get('order_ids', [])
+        
+        if not order_ids:
+            return jsonify({'success': False, 'message': 'Không có hóa đơn nào được chọn'}), 400
+        
+        deleted_count = 0
+        for order_id in order_ids:
+            order = Order.query.get(order_id)
+            if order:
+                # Hoàn lại tồn kho cho từng sản phẩm trong đơn
+                for item in order.items:
+                    product = Product.query.get(item.product_id)
+                    if product:
+                        # Ghi log hoàn kho
+                        InventoryLog.log_change(
+                            product=product,
+                            change=item.quantity,
+                            log_type=InventoryLog.TYPE_ADJUST,
+                            note=f'Hoàn kho - Xóa đơn {order.order_code}',
+                            user_id=current_user.id
+                        )
+                
+                # Xóa các order items
+                OrderItem.query.filter_by(order_id=order.id).delete()
+                
+                # Xóa order
+                db.session.delete(order)
+                deleted_count += 1
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True, 
+            'deleted_count': deleted_count,
+            'message': f'Đã xóa {deleted_count} hóa đơn'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+

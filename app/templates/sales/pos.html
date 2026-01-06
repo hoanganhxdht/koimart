@@ -307,6 +307,74 @@
     <span class="badge" id="mobileCartBadge">0</span>
 </button>
 
+<!-- Payment Confirmation Modal -->
+<div class="modal fade" id="paymentConfirmModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="bi bi-credit-card me-2"></i>Xác nhận thanh toán</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Phương thức thanh toán:</label>
+                    <div class="btn-group w-100" role="group">
+                        <input type="radio" class="btn-check" name="paymentMethod" id="payCash" value="cash" checked>
+                        <label class="btn btn-outline-success" for="payCash">
+                            <i class="bi bi-cash me-1"></i>Tiền mặt
+                        </label>
+                        <input type="radio" class="btn-check" name="paymentMethod" id="payCard" value="card">
+                        <label class="btn btn-outline-info" for="payCard">
+                            <i class="bi bi-credit-card me-1"></i>Thẻ
+                        </label>
+                        <input type="radio" class="btn-check" name="paymentMethod" id="payTransfer" value="transfer">
+                        <label class="btn btn-outline-primary" for="payTransfer">
+                            <i class="bi bi-bank me-1"></i>Chuyển khoản
+                        </label>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="order-summary" id="orderSummary">
+                    <!-- Order items will be populated here -->
+                </div>
+
+                <hr>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="fs-5">Tổng cộng:</span>
+                    <span class="fs-4 fw-bold text-success" id="confirmTotal">0đ</span>
+                </div>
+
+                <!-- Cash calculation -->
+                <div class="mt-3 p-3 bg-light rounded" id="cashCalcSection">
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="form-label small">Khách đưa:</label>
+                            <input type="number" class="form-control" id="cashReceived" oninput="calculateChange()"
+                                placeholder="0">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small">Tiền thừa:</label>
+                            <input type="text" class="form-control fw-bold text-success" id="changeAmount" readonly
+                                value="0đ">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg me-1"></i>Hủy
+                </button>
+                <button type="button" class="btn btn-success btn-lg" onclick="confirmCheckout()">
+                    <i class="bi bi-check-lg me-1"></i>Xác nhận thanh toán
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Invoice Modal -->
 <div class="modal fade" id="invoiceModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
@@ -480,9 +548,62 @@
             return;
         }
 
+        // Show confirmation modal instead of directly creating order
+        const orderSummary = document.getElementById('orderSummary');
+        const confirmTotal = document.getElementById('confirmTotal');
+        let total = 0;
+
+        let summaryHtml = '<div style="max-height: 200px; overflow-y: auto;">';
+        cart.forEach(item => {
+            const subtotal = item.price * item.quantity;
+            total += subtotal;
+            summaryHtml += `
+                <div class="d-flex justify-content-between align-items-center py-1 border-bottom">
+                    <div>
+                        <span class="fw-semibold">${item.name}</span>
+                        <small class="text-muted d-block">${item.price.toLocaleString()}đ × ${item.quantity}</small>
+                    </div>
+                    <span class="fw-semibold">${subtotal.toLocaleString()}đ</span>
+                </div>
+            `;
+        });
+        summaryHtml += '</div>';
+
+        orderSummary.innerHTML = summaryHtml;
+        confirmTotal.textContent = total.toLocaleString() + 'đ';
+
+        // Reset cash received
+        document.getElementById('cashReceived').value = '';
+        document.getElementById('changeAmount').value = '0đ';
+
+        // Show modal
+        const paymentConfirmModal = new bootstrap.Modal(document.getElementById('paymentConfirmModal'));
+        paymentConfirmModal.show();
+    }
+
+    function calculateChange() {
+        const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const received = parseInt(document.getElementById('cashReceived').value) || 0;
+        const change = received - total;
+
+        const changeEl = document.getElementById('changeAmount');
+        if (change >= 0) {
+            changeEl.value = change.toLocaleString() + 'đ';
+            changeEl.classList.remove('text-danger');
+            changeEl.classList.add('text-success');
+        } else {
+            changeEl.value = 'Thiếu ' + Math.abs(change).toLocaleString() + 'đ';
+            changeEl.classList.remove('text-success');
+            changeEl.classList.add('text-danger');
+        }
+    }
+
+    function confirmCheckout() {
+        const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+
         const data = {
             customer_id: document.getElementById('customerId').value || null,
-            payment_method: 'cash',
+            payment_method: paymentMethod,
             items: cart.map(item => ({
                 product_id: item.id,
                 quantity: item.quantity
@@ -497,6 +618,9 @@
             .then(res => res.json())
             .then(result => {
                 if (result.success) {
+                    // Close confirmation modal
+                    bootstrap.Modal.getInstance(document.getElementById('paymentConfirmModal')).hide();
+
                     // Show invoice modal
                     showInvoiceModal(result);
                     clearCart();
