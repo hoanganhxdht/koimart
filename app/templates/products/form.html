@@ -221,11 +221,11 @@
         html5QrCode = new Html5Qrcode("barcode-reader");
 
         const config = {
-            fps: 15, // Tăng FPS để quét mượt hơn
-            qrbox: { width: 300, height: 100 }, // Khung chữ nhật dài phù hợp với mã vạch sản phẩm
+            fps: 25, // Tăng tốc độ quét lên tối đa
+            qrbox: { width: 320, height: 150 }, // Mở rộng vùng quét dễ bắt hơn
             aspectRatio: 1.0,
             experimentalFeatures: {
-                useBarCodeDetectorIfSupported: true // Sử dụng BarcodeDetector native nếu có
+                useBarCodeDetectorIfSupported: true
             },
             formatsToSupport: [
                 Html5QrcodeSupportedFormats.EAN_13,
