@@ -195,8 +195,10 @@
             </div>
             <div class="modal-body">
                 <p>Bạn có chắc chắn muốn xóa <strong id="deleteCount">0</strong> sản phẩm đã chọn?</p>
-                <p class="text-muted small mb-0">Lưu ý: Sản phẩm sẽ được chuyển sang trạng thái "Ngừng bán", không xóa
-                    hoàn toàn.</p>
+                <div class="alert alert-danger small mb-0">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    <strong>Cảnh báo:</strong> Sản phẩm sẽ bị xóa hoàn toàn khỏi database và không thể khôi phục!
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
