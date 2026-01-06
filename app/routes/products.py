@@ -379,3 +379,73 @@ def download_template():
     )
     return response
 
+
+@products_bp.route('/export/excel')
+@login_required
+def export_excel():
+    """Xuất danh sách sản phẩm ra Excel"""
+    try:
+        from openpyxl import Workbook
+        from io import BytesIO
+        from flask import make_response
+        
+        products = Product.query.filter_by(is_active=True).order_by(Product.name).all()
+        
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Danh sách sản phẩm"
+        
+        # Header
+        headers = ['ID', 'Tên sản phẩm', 'Mã vạch', 'Danh mục', 'Đơn vị', 'Giá vốn', 'Giá bán', 'Tồn kho']
+        ws.append(headers)
+        
+        # Style Header
+        from openpyxl.styles import Font, PatternFill
+        header_font = Font(bold=True, color="FFFFFF")
+        header_fill = PatternFill(start_color="10B981", end_color="10B981", fill_type="solid")
+        
+        for cell in ws[1]:
+            cell.font = header_font
+            cell.fill = header_fill
+        
+        for p in products:
+            ws.append([
+                p.id,
+                p.name,
+                p.barcode,
+                p.category.name if p.category else '',
+                p.unit,
+                p.cost,
+                p.price,
+                p.stock
+            ])
+            
+        # Auto adjust column width
+        for col in ws.columns:
+            max_length = 0
+            column = col[0].column_letter
+            for cell in col:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            adjusted_width = (max_length + 2)
+            ws.column_dimensions[column].width = adjusted_width
+        
+        output = BytesIO()
+        wb.save(output)
+        output.seek(0)
+        
+        response = make_response(output.getvalue())
+        response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        response.headers['Content-Disposition'] = 'attachment; filename=danh_sach_san_pham.xlsx'
+        
+        return response
+    except ImportError:
+        flash('Vui lòng cài đặt openpyxl: pip install openpyxl', 'danger')
+        return redirect(url_for('products.index'))
+    except Exception as e:
+        flash(f'Lỗi xuất file: {str(e)}', 'danger')
+        return redirect(url_for('products.index'))
+
