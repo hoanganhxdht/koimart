@@ -101,9 +101,23 @@ def generate_invoice_pdf(order, settings=None):
     
     elements.append(Spacer(1, 10*mm))
     
+    elements.append(Spacer(1, 10*mm))
+    
     # Invoice header
     elements.append(Paragraph("HÓA ĐƠN BÁN HÀNG", heading_style))
+    elements.append(Paragraph("(Hóa đơn điện tử khởi tạo từ máy tính tiền)", subtitle_style))
     
+    # Decree 70/2025 Compliance Info
+    compliance_style = ParagraphStyle(
+        'Compliance',
+        parent=normal_style,
+        alignment=TA_CENTER,
+        fontSize=9
+    )
+    elements.append(Paragraph("Mẫu số: 1C26TYP - Ký hiệu: K26T", compliance_style))
+    elements.append(Paragraph(f"Mã CQT: 26{order.order_code}681923", compliance_style))
+    elements.append(Spacer(1, 5*mm))
+
     # Register Fonts
     from flask import current_app
     tt_font_dir = os.path.join(current_app.root_path, 'static', 'fonts')
@@ -112,7 +126,6 @@ def generate_invoice_pdf(order, settings=None):
         pdfmetrics.registerFont(TTFont('Arial-Bold', os.path.join(tt_font_dir, 'arialbd.ttf')))
     except Exception as e:
         print(f"Font loading error: {e}")
-        # Fallback if font missing (though we just copied it)
         pass
 
     # Order info table
