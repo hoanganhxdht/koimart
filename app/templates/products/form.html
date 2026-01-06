@@ -41,9 +41,15 @@
         <form method="POST" class="row g-3" id="productForm">
             <div class="col-md-6">
                 <label class="form-label">Mã vạch <small class="text-muted">(tùy chọn)</small></label>
-                <input type="text" name="barcode" id="barcodeInput" class="form-control"
-                    value="{{ product.barcode if product else '' }}"
-                    data-product-id="{{ product.id if product else '' }}">
+                <div class="input-group">
+                    <input type="text" name="barcode" id="barcodeInput" class="form-control"
+                        value="{{ product.barcode if product else '' }}"
+                        data-product-id="{{ product.id if product else '' }}">
+                    <button class="btn btn-outline-secondary" type="button" onclick="openBarcodeScanner()"
+                        title="Quét mã vạch">
+                        <i class="bi bi-upc-scan"></i>
+                    </button>
+                </div>
                 <div class="barcode-status" id="barcodeStatus"></div>
             </div>
 
@@ -155,6 +161,37 @@
     </div>
 </div>
 {% endif %}
+
+<!-- Barcode Scanner Modal -->
+<div class="modal fade" id="barcodeScannerModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="bi bi-upc-scan me-2"></i>Quét mã vạch</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    onclick="stopBarcodeScanner()"></button>
+            </div>
+            <div class="modal-body p-3">
+                <div id="barcode-scanner-container"
+                    style="width: 100%; min-height: 300px; background: #000; border-radius: 8px; overflow: hidden;">
+                    <div id="barcode-reader" style="width: 100%;"></div>
+                </div>
+                <div id="scanner-status" class="text-center mt-3">
+                    <i class="bi bi-camera-video text-primary" style="font-size: 1.5rem;"></i>
+                    <p class="text-muted mb-0 mt-2">Đang khởi động camera...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="stopBarcodeScanner()">
+                    <i class="bi bi-x-lg me-1"></i>Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- html5-qrcode library for barcode scanning -->
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 {% endblock %}
 
 {% block extra_js %}
@@ -162,6 +199,85 @@
     let barcodeTimeout = null;
     let barcodeValid = true;
 
+    // Barcode Scanner Logic
+    let html5QrCode = null;
+    let barcodeScannerModal = null;
+
+    function openBarcodeScanner() {
+        barcodeScannerModal = new bootstrap.Modal(document.getElementById('barcodeScannerModal'));
+        barcodeScannerModal.show();
+
+        // Reset status
+        document.getElementById('scanner-status').innerHTML = `
+            <i class="bi bi-camera-video text-primary" style="font-size: 1.5rem;"></i>
+            <p class="text-muted mb-0 mt-2">Đang khởi động camera...</p>
+        `;
+
+        // Start scanner after modal is shown
+        document.getElementById('barcodeScannerModal').addEventListener('shown.bs.modal', startBarcodeScanner, { once: true });
+    }
+
+    function startBarcodeScanner() {
+        html5QrCode = new Html5Qrcode("barcode-reader");
+
+        const config = {
+            fps: 10,
+            qrbox: { width: 250, height: 150 },
+            aspectRatio: 1.5
+        };
+
+        html5QrCode.start(
+            { facingMode: "environment" }, // Use back camera
+            config,
+            onScanSuccess,
+            onScanFailure
+        ).then(() => {
+            document.getElementById('scanner-status').innerHTML = `
+                <i class="bi bi-camera-video-fill text-success" style="font-size: 1.5rem;"></i>
+                <p class="text-muted mb-0 mt-2">Đưa mã vạch vào khung hình...</p>
+            `;
+        }).catch((err) => {
+            document.getElementById('scanner-status').innerHTML = `
+                <i class="bi bi-exclamation-triangle text-warning" style="font-size: 1.5rem;"></i>
+                <p class="text-danger mb-0 mt-2">Không thể truy cập camera: ${err}</p>
+            `;
+        });
+    }
+
+    function onScanSuccess(decodedText, decodedResult) {
+        // Play beep sound
+        const beep = new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...');
+        try { beep.play(); } catch (e) { }
+
+        // Fill input
+        const input = document.getElementById('barcodeInput');
+        input.value = decodedText;
+
+        // Trigger input event to check duplicate
+        input.dispatchEvent(new Event('input'));
+
+        // Stop scanner and close modal
+        stopBarcodeScanner();
+        barcodeScannerModal.hide();
+    }
+
+    function onScanFailure(error) {
+        // Ignore scan failures
+    }
+
+    function stopBarcodeScanner() {
+        if (html5QrCode) {
+            html5QrCode.stop().then(() => {
+                html5QrCode.clear();
+                html5QrCode = null;
+            }).catch(err => console.error("Error stopping scanner:", err));
+        }
+    }
+
+    // Stop scanner when modal is closed
+    document.getElementById('barcodeScannerModal').addEventListener('hidden.bs.modal', stopBarcodeScanner);
+
+    // Existing duplicate check logic
     document.getElementById('barcodeInput').addEventListener('input', function () {
         const barcode = this.value.trim();
         const productId = this.dataset.productId;
