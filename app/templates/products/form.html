@@ -221,16 +221,15 @@
         html5QrCode = new Html5Qrcode("barcode-reader");
 
         const config = {
-            fps: 25,
-            qrbox: { width: 320, height: 150 },
+            fps: 20, // Giảm nhẹ FPS để tránh quá nhiệt trên iOS
+            qrbox: { width: 300, height: 150 },
             aspectRatio: 1.0,
             experimentalFeatures: {
-                useBarCodeDetectorIfSupported: true
+                useBarCodeDetectorIfSupported: false // Tắt native detector, dùng ZXing ổn định hơn trên iOS
             },
             videoConstraints: {
-                width: { min: 1024, ideal: 1280, max: 1920 },
-                height: { min: 720, ideal: 720, max: 1080 },
-                focusMode: "continuous",
+                width: { min: 640, ideal: 1280, max: 1920 },
+                height: { min: 480, ideal: 720, max: 1080 },
                 facingMode: "environment"
             },
             formatsToSupport: [
