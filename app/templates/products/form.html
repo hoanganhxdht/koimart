@@ -221,8 +221,8 @@
         html5QrCode = new Html5Qrcode("barcode-reader");
 
         const config = {
-            fps: 20, // Giảm nhẹ FPS để tránh quá nhiệt trên iOS
-            qrbox: { width: 300, height: 150 },
+            fps: 25, // Tăng tốc độ quét lên 25 khung hình/giây
+            qrbox: { width: 280, height: 280 }, // Ô quét to hơn (vuông) để dễ bắt dính mã vạch
             aspectRatio: 1.0,
             experimentalFeatures: {
                 useBarCodeDetectorIfSupported: false // Tắt native detector, dùng ZXing ổn định hơn trên iOS
