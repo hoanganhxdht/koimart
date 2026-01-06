@@ -318,9 +318,31 @@
                 <h6 class="fw-bold bg-light p-2 rounded"><i class="bi bi-cash-stack me-2"></i>B. DOANH THU VÀ THUẾ PHẢI
                     NỘP</h6>
 
-                {% if total_revenue <= 500000000 %} <div class="alert alert-success">
-                    <i class="bi bi-check-circle me-2"></i>
-                    Doanh thu ≤ 500 triệu VND/năm → <strong>Miễn thuế GTGT và TNCN</strong>
+                {% if total_revenue <= 500000000 %} <div class="alert alert-info border-info shadow-sm">
+                    <h6 class="alert-heading fw-bold"><i class="bi bi-info-circle-fill me-2"></i>Quy định tại Điều 8
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-8">
+                            <p class="mb-2">
+                                Doanh thu thực tế trong năm là <strong>{{ '{:,.0f}'.format(total_revenue) }}
+                                    VND</strong> (≤ 500 triệu đồng).
+                            </p>
+                            <ul class="mb-0 small">
+                                <li class="mb-1">Bạn thuộc diện <strong>không phải nộp thuế GTGT và TNCN</strong>.</li>
+                                <li class="text-danger fw-bold">
+                                    <i class="bi bi-exclamation-circle me-1"></i>BẮT BUỘC: Phải nộp "Thông báo doanh thu
+                                    thực tế phát sinh" cho cơ quan thuế.
+                                </li>
+                                <li><strong>Thời hạn nộp thông báo:</strong> Chậm nhất ngày 31/01 năm sau.</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-center justify-content-center border-start">
+                            <div class="text-center">
+                                <span class="d-block text-muted small mb-1">Trạng thái</span>
+                                <span class="badge bg-success p-2">Đủ điều kiện miễn thuế</span>
+                            </div>
+                        </div>
+                    </div>
             </div>
             {% endif %}
 
