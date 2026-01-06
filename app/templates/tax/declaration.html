@@ -361,8 +361,7 @@
                         <td class="text-center fw-bold">[23]</td>
                         <td class="text-end">
                             <input type="text" class="form-control form-control-sm text-end"
-                                value="{{ '{:,.0f}'.format(max(0, total_revenue - 500000000)) }}" readonly
-                                id="taxableRevenue">
+                                value="{{ '{:,.0f}'.format(taxable_revenue) }}" readonly id="taxableRevenue">
                         </td>
                         <td class="small text-muted">[21] - 500 triệu</td>
                     </tr>
