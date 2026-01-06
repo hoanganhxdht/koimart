@@ -244,10 +244,12 @@ def generate_invoice_pdf(order, settings=None):
     footer_style = ParagraphStyle(
         'Footer',
         parent=styles['Normal'],
+        fontName='Arial',
         fontSize=10,
         textColor=colors.HexColor('#64748b'),
         alignment=TA_CENTER
     )
+    elements.append(Paragraph("Tra cứu hóa đơn tại: tracuuhoadon.gdt.gov.vn", footer_style))
     elements.append(Paragraph("Cảm ơn quý khách đã mua hàng!", footer_style))
     elements.append(Paragraph("Hẹn gặp lại!", footer_style))
     
