@@ -44,6 +44,7 @@ def generate_invoice_pdf(order, settings=None):
     title_style = ParagraphStyle(
         'CustomTitle',
         parent=styles['Heading1'],
+        fontName='Arial-Bold',
         fontSize=24,
         textColor=colors.HexColor('#22c55e'),
         alignment=TA_CENTER,
@@ -53,6 +54,7 @@ def generate_invoice_pdf(order, settings=None):
     subtitle_style = ParagraphStyle(
         'Subtitle',
         parent=styles['Normal'],
+        fontName='Arial',
         fontSize=10,
         textColor=colors.HexColor('#64748b'),
         alignment=TA_CENTER,
@@ -62,6 +64,7 @@ def generate_invoice_pdf(order, settings=None):
     heading_style = ParagraphStyle(
         'CustomHeading',
         parent=styles['Heading2'],
+        fontName='Arial-Bold',
         fontSize=14,
         textColor=colors.HexColor('#1e293b'),
         spaceBefore=15,
@@ -71,6 +74,7 @@ def generate_invoice_pdf(order, settings=None):
     normal_style = ParagraphStyle(
         'CustomNormal',
         parent=styles['Normal'],
+        fontName='Arial',
         fontSize=10,
         textColor=colors.HexColor('#334155')
     )
@@ -100,6 +104,17 @@ def generate_invoice_pdf(order, settings=None):
     # Invoice header
     elements.append(Paragraph("HÓA ĐƠN BÁN HÀNG", heading_style))
     
+    # Register Fonts
+    from flask import current_app
+    tt_font_dir = os.path.join(current_app.root_path, 'static', 'fonts')
+    try:
+        pdfmetrics.registerFont(TTFont('Arial', os.path.join(tt_font_dir, 'arial.ttf')))
+        pdfmetrics.registerFont(TTFont('Arial-Bold', os.path.join(tt_font_dir, 'arialbd.ttf')))
+    except Exception as e:
+        print(f"Font loading error: {e}")
+        # Fallback if font missing (though we just copied it)
+        pass
+
     # Order info table
     order_info = [
         ['Mã hóa đơn:', order.order_code, 'Ngày:', order.created_at.strftime('%d/%m/%Y %H:%M')],
@@ -113,8 +128,9 @@ def generate_invoice_pdf(order, settings=None):
         ('TEXTCOLOR', (2, 0), (2, -1), colors.HexColor('#64748b')),
         ('TEXTCOLOR', (1, 0), (1, -1), colors.HexColor('#1e293b')),
         ('TEXTCOLOR', (3, 0), (3, -1), colors.HexColor('#1e293b')),
-        ('FONTNAME', (1, 0), (1, -1), 'Helvetica-Bold'),
-        ('FONTNAME', (3, 0), (3, -1), 'Helvetica-Bold'),
+        ('FONTNAME', (0, 0), (-1, -1), 'Arial'),
+        ('FONTNAME', (1, 0), (1, -1), 'Arial-Bold'),
+        ('FONTNAME', (3, 0), (3, -1), 'Arial-Bold'),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
     ]))
     elements.append(info_table)
@@ -138,13 +154,14 @@ def generate_invoice_pdf(order, settings=None):
         # Header
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#22c55e')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Arial-Bold'),
         ('FONTSIZE', (0, 0), (-1, 0), 10),
         ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
         ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
         ('TOPPADDING', (0, 0), (-1, 0), 10),
         
         # Body
+        ('FONTNAME', (0, 1), (-1, -1), 'Arial'),
         ('FONTSIZE', (0, 1), (-1, -1), 9),
         ('TEXTCOLOR', (0, 1), (-1, -1), colors.HexColor('#334155')),
         ('ALIGN', (0, 1), (0, -1), 'CENTER'),  # STT
@@ -176,6 +193,7 @@ def generate_invoice_pdf(order, settings=None):
     
     totals_table = Table(totals_data, colWidths=[30, 180, 40, 40, 80, 90])
     totals_table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (-1, -1), 'Arial'),
         ('FONTSIZE', (0, 0), (-1, -1), 10),
         ('TEXTCOLOR', (4, 0), (4, -1), colors.HexColor('#64748b')),
         ('TEXTCOLOR', (5, 0), (5, 1), colors.HexColor('#1e293b')),
@@ -183,7 +201,7 @@ def generate_invoice_pdf(order, settings=None):
         ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
         
         # Total row
-        ('FONTNAME', (4, 2), (5, 2), 'Helvetica-Bold'),
+        ('FONTNAME', (4, 2), (5, 2), 'Arial-Bold'),
         ('FONTSIZE', (4, 2), (5, 2), 12),
         ('TEXTCOLOR', (4, 2), (4, 2), colors.HexColor('#1e293b')),
         ('TEXTCOLOR', (5, 2), (5, 2), colors.HexColor('#22c55e')),
