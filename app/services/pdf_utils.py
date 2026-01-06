@@ -27,6 +27,21 @@ def generate_invoice_pdf(order, settings=None):
     """
     buffer = BytesIO()
     
+    # Register Fonts & Determine Usage
+    from flask import current_app
+    tt_font_dir = os.path.join(current_app.root_path, 'static', 'fonts')
+    
+    font_regular = 'Helvetica'
+    font_bold = 'Helvetica-Bold'
+    
+    try:
+        pdfmetrics.registerFont(TTFont('Arial', os.path.join(tt_font_dir, 'arial.ttf')))
+        pdfmetrics.registerFont(TTFont('Arial-Bold', os.path.join(tt_font_dir, 'arialbd.ttf')))
+        font_regular = 'Arial'
+        font_bold = 'Arial-Bold'
+    except Exception as e:
+        print(f"Font loading error: {e}. Fallback to Helvetica.")
+
     # Create document
     doc = SimpleDocTemplate(
         buffer,
@@ -44,7 +59,7 @@ def generate_invoice_pdf(order, settings=None):
     title_style = ParagraphStyle(
         'CustomTitle',
         parent=styles['Heading1'],
-        fontName='Arial-Bold',
+        fontName=font_bold,
         fontSize=24,
         textColor=colors.HexColor('#22c55e'),
         alignment=TA_CENTER,
@@ -54,7 +69,7 @@ def generate_invoice_pdf(order, settings=None):
     subtitle_style = ParagraphStyle(
         'Subtitle',
         parent=styles['Normal'],
-        fontName='Arial',
+        fontName=font_regular,
         fontSize=10,
         textColor=colors.HexColor('#64748b'),
         alignment=TA_CENTER,
@@ -64,7 +79,7 @@ def generate_invoice_pdf(order, settings=None):
     heading_style = ParagraphStyle(
         'CustomHeading',
         parent=styles['Heading2'],
-        fontName='Arial-Bold',
+        fontName=font_bold,
         fontSize=14,
         textColor=colors.HexColor('#1e293b'),
         spaceBefore=15,
@@ -74,7 +89,7 @@ def generate_invoice_pdf(order, settings=None):
     normal_style = ParagraphStyle(
         'CustomNormal',
         parent=styles['Normal'],
-        fontName='Arial',
+        fontName=font_regular,
         fontSize=10,
         textColor=colors.HexColor('#334155')
     )
@@ -101,8 +116,6 @@ def generate_invoice_pdf(order, settings=None):
     
     elements.append(Spacer(1, 10*mm))
     
-    elements.append(Spacer(1, 10*mm))
-    
     # Invoice header
     elements.append(Paragraph("HÓA ĐƠN BÁN HÀNG", heading_style))
     elements.append(Paragraph("(Hóa đơn điện tử khởi tạo từ máy tính tiền)", subtitle_style))
@@ -112,21 +125,12 @@ def generate_invoice_pdf(order, settings=None):
         'Compliance',
         parent=normal_style,
         alignment=TA_CENTER,
-        fontSize=9
+        fontSize=9,
+        fontName=font_regular
     )
     elements.append(Paragraph("Mẫu số: 1C26TYP - Ký hiệu: K26T", compliance_style))
     elements.append(Paragraph(f"Mã CQT: 26{order.order_code}681923", compliance_style))
     elements.append(Spacer(1, 5*mm))
-
-    # Register Fonts
-    from flask import current_app
-    tt_font_dir = os.path.join(current_app.root_path, 'static', 'fonts')
-    try:
-        pdfmetrics.registerFont(TTFont('Arial', os.path.join(tt_font_dir, 'arial.ttf')))
-        pdfmetrics.registerFont(TTFont('Arial-Bold', os.path.join(tt_font_dir, 'arialbd.ttf')))
-    except Exception as e:
-        print(f"Font loading error: {e}")
-        pass
 
     # Order info table
     order_info = [
