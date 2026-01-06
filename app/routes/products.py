@@ -86,17 +86,22 @@ def edit(id):
 @products_bp.route('/<int:id>/delete', methods=['POST'])
 @login_required
 def delete(id):
-    """Xóa sản phẩm (soft delete)"""
+    """Xóa sản phẩm hoàn toàn khỏi database"""
     product = Product.query.get_or_404(id)
-    product.is_active = False
+    
+    # Xóa các inventory logs liên quan
+    InventoryLog.query.filter_by(product_id=id).delete()
+    
+    # Xóa sản phẩm
+    db.session.delete(product)
     db.session.commit()
-    flash('Đã xóa sản phẩm.', 'success')
+    flash('Đã xóa sản phẩm hoàn toàn.', 'success')
     return redirect(url_for('products.index'))
 
 @products_bp.route('/bulk-delete', methods=['POST'])
 @login_required
 def bulk_delete():
-    """Xóa nhiều sản phẩm cùng lúc (soft delete)"""
+    """Xóa nhiều sản phẩm hoàn toàn khỏi database"""
     try:
         data = request.get_json()
         product_ids = data.get('product_ids', [])
@@ -108,7 +113,11 @@ def bulk_delete():
         for product_id in product_ids:
             product = Product.query.get(product_id)
             if product:
-                product.is_active = False
+                # Xóa các inventory logs liên quan
+                InventoryLog.query.filter_by(product_id=product_id).delete()
+                
+                # Xóa sản phẩm
+                db.session.delete(product)
                 deleted_count += 1
         
         db.session.commit()
@@ -122,6 +131,27 @@ def bulk_delete():
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
+
+@products_bp.route('/check-barcode')
+@login_required
+def check_barcode():
+    """Kiểm tra mã vạch đã tồn tại chưa"""
+    barcode = request.args.get('barcode', '')
+    product_id = request.args.get('product_id', type=int)  # Để loại trừ sản phẩm đang sửa
+    
+    if not barcode:
+        return jsonify({'exists': False})
+    
+    query = Product.query.filter_by(barcode=barcode)
+    if product_id:
+        query = query.filter(Product.id != product_id)
+    
+    existing = query.first()
+    
+    return jsonify({
+        'exists': existing is not None,
+        'product_name': existing.name if existing else None
+    })
 
 @products_bp.route('/categories')
 @login_required

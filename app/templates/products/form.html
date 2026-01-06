@@ -1,6 +1,32 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ 'Sửa' if product else 'Thêm' }} sản phẩm - MiniMart{% endblock %}
+{% block title %}{{ 'Sửa' if product else 'Thêm' }} sản phẩm - KOI MART{% endblock %}
+
+{% block extra_css %}
+<style>
+    .barcode-status {
+        font-size: 0.85rem;
+        margin-top: 5px;
+    }
+
+    .barcode-status.checking {
+        color: #64748b;
+    }
+
+    .barcode-status.error {
+        color: #ef4444;
+    }
+
+    .barcode-status.success {
+        color: #22c55e;
+    }
+
+    .form-control.is-invalid-custom {
+        border-color: #ef4444;
+        box-shadow: 0 0 0 0.2rem rgba(239, 68, 68, 0.25);
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="top-bar">
@@ -12,10 +38,13 @@
 
 <div class="card">
     <div class="card-body">
-        <form method="POST" class="row g-3">
+        <form method="POST" class="row g-3" id="productForm">
             <div class="col-md-6">
                 <label class="form-label">Mã vạch <small class="text-muted">(tùy chọn)</small></label>
-                <input type="text" name="barcode" class="form-control" value="{{ product.barcode if product else '' }}">
+                <input type="text" name="barcode" id="barcodeInput" class="form-control"
+                    value="{{ product.barcode if product else '' }}"
+                    data-product-id="{{ product.id if product else '' }}">
+                <div class="barcode-status" id="barcodeStatus"></div>
             </div>
 
             <div class="col-md-6">
@@ -83,7 +112,7 @@
 
             <div class="col-12">
                 <hr>
-                <button type="submit" class="btn btn-primary">
+                <button type="submit" class="btn btn-primary" id="submitBtn">
                     <i class="bi bi-check-lg me-1"></i>{{ 'Cập nhật' if product else 'Thêm mới' }}
                 </button>
 
@@ -103,21 +132,94 @@
 <div class="modal fade" id="deleteModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Xác nhận xóa</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Xác nhận xóa</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                Bạn có chắc muốn xóa sản phẩm <strong>{{ product.name }}</strong>?
+                <p>Bạn có chắc muốn xóa sản phẩm <strong>{{ product.name }}</strong>?</p>
+                <div class="alert alert-warning small mb-0">
+                    <i class="bi bi-info-circle me-1"></i>
+                    <strong>Lưu ý:</strong> Sản phẩm sẽ bị xóa hoàn toàn khỏi database và không thể khôi phục.
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
                 <form action="{{ url_for('products.delete', id=product.id) }}" method="POST" style="display: inline;">
-                    <button type="submit" class="btn btn-danger">Xóa</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i>Xóa hoàn toàn
+                    </button>
                 </form>
             </div>
         </div>
     </div>
 </div>
 {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let barcodeTimeout = null;
+    let barcodeValid = true;
+
+    document.getElementById('barcodeInput').addEventListener('input', function () {
+        const barcode = this.value.trim();
+        const productId = this.dataset.productId;
+        const statusEl = document.getElementById('barcodeStatus');
+        const submitBtn = document.getElementById('submitBtn');
+
+        // Clear previous timeout
+        if (barcodeTimeout) clearTimeout(barcodeTimeout);
+
+        if (!barcode) {
+            statusEl.textContent = '';
+            statusEl.className = 'barcode-status';
+            this.classList.remove('is-invalid-custom');
+            barcodeValid = true;
+            return;
+        }
+
+        // Show checking status
+        statusEl.textContent = 'Đang kiểm tra...';
+        statusEl.className = 'barcode-status checking';
+
+        // Debounce the check
+        barcodeTimeout = setTimeout(() => {
+            let url = `{{ url_for('products.check_barcode') }}?barcode=${encodeURIComponent(barcode)}`;
+            if (productId) {
+                url += `&product_id=${productId}`;
+            }
+
+            fetch(url)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.exists) {
+                        statusEl.innerHTML = `<i class="bi bi-exclamation-circle me-1"></i>Mã vạch đã tồn tại: <strong>${data.product_name}</strong>`;
+                        statusEl.className = 'barcode-status error';
+                        document.getElementById('barcodeInput').classList.add('is-invalid-custom');
+                        barcodeValid = false;
+                    } else {
+                        statusEl.innerHTML = '<i class="bi bi-check-circle me-1"></i>Mã vạch hợp lệ';
+                        statusEl.className = 'barcode-status success';
+                        document.getElementById('barcodeInput').classList.remove('is-invalid-custom');
+                        barcodeValid = true;
+                    }
+                })
+                .catch(err => {
+                    statusEl.textContent = '';
+                    statusEl.className = 'barcode-status';
+                    barcodeValid = true;
+                });
+        }, 500);
+    });
+
+    // Prevent form submission if barcode is invalid
+    document.getElementById('productForm').addEventListener('submit', function (e) {
+        if (!barcodeValid) {
+            e.preventDefault();
+            alert('Mã vạch đã tồn tại! Vui lòng sử dụng mã vạch khác.');
+            document.getElementById('barcodeInput').focus();
+        }
+    });
+</script>
 {% endblock %}
