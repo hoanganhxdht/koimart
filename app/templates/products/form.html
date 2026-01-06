@@ -222,7 +222,8 @@
 
         const config = {
             fps: 20, // Giảm nhẹ FPS để tránh quá nhiệt trên iOS
-            fps: 20, // Giảm nhẹ FPS để tránh quá nhiệt trên iOS
+            qrbox: { width: 300, height: 150 },
+            aspectRatio: 1.0,
             experimentalFeatures: {
                 useBarCodeDetectorIfSupported: false // Tắt native detector, dùng ZXing ổn định hơn trên iOS
             },
