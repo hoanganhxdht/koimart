@@ -30,24 +30,27 @@ def index():
 def create():
     """Thêm sản phẩm mới"""
     if request.method == 'POST':
+        initial_stock = int(request.form.get('stock', 0))
+        
         product = Product(
             barcode=request.form.get('barcode'),
             name=request.form.get('name'),
             price=float(request.form.get('price', 0)),
             cost=float(request.form.get('cost', 0)),
-            stock=int(request.form.get('stock', 0)),
+            stock=0, # Init with 0, updated via log_change
             unit=request.form.get('unit', 'cái'),
             min_stock=int(request.form.get('min_stock', 5)),
             category_id=request.form.get('category_id') or None
         )
         
         db.session.add(product)
+        db.session.flush() # Get ID
         
         # Ghi log nhập kho ban đầu
-        if product.stock > 0:
+        if initial_stock > 0:
             InventoryLog.log_change(
                 product=product,
-                change=product.stock,
+                change=initial_stock,
                 log_type=InventoryLog.TYPE_IMPORT,
                 note='Tồn kho ban đầu',
                 user_id=current_user.id
