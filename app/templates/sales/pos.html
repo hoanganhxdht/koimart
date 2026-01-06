@@ -731,6 +731,12 @@
             experimentalFeatures: {
                 useBarCodeDetectorIfSupported: true
             },
+            videoConstraints: {
+                width: { min: 1024, ideal: 1280, max: 1920 },
+                height: { min: 720, ideal: 720, max: 1080 },
+                focusMode: "continuous",
+                facingMode: "environment"
+            },
             formatsToSupport: [
                 Html5QrcodeSupportedFormats.EAN_13,
                 Html5QrcodeSupportedFormats.EAN_8,
@@ -741,16 +747,8 @@
             ]
         };
 
-        // Request High Resolution for better 1D barcode scanning
-        const cameraConfig = {
-            facingMode: "environment",
-            width: { min: 1024, ideal: 1280, max: 1920 },
-            height: { min: 720, ideal: 720, max: 1080 },
-            focusMode: "continuous"
-        };
-
         html5QrCode.start(
-            cameraConfig,
+            { facingMode: "environment" },
             config,
             onScanSuccess,
             onScanFailure
