@@ -10,11 +10,10 @@ tax_bp = Blueprint('tax', __name__)
 @tax_bp.route('/declaration')
 @login_required
 def declaration():
-    """Lập tờ khai thuế Hộ kinh doanh - Mẫu 01/CNKD"""
+    """Lập tờ khai thuế Hộ kinh doanh - Theo quy định từ 01/01/2026"""
     # Lấy tham số
     month = request.args.get('month', datetime.now().month, type=int)
-    year = request.args.get('year', datetime.now().year, type=int)
-    method = request.args.get('method', 'khoan')
+    year = request.args.get('year', max(2026, datetime.now().year), type=int)  # Mặc định từ 2026
     period = request.args.get('period', 'year')
     
     # Tính khoảng thời gian theo kỳ kê khai
@@ -49,13 +48,20 @@ def declaration():
         Order.payment_status == 'paid'
     ).count()
     
-    # Tỷ lệ thuế cho Hộ kinh doanh (Thông tư 40/2021/TT-BTC)
-    # Bán lẻ hàng hóa: GTGT 1%, TNCN 0.5%
+    # Ngưỡng miễn thuế từ 01/01/2026 theo Luật Thuế TNCN sửa đổi 2025
+    TAX_THRESHOLD = 500000000  # 500 triệu VND
+    
+    # Doanh thu chịu thuế = Doanh thu - Ngưỡng miễn thuế (nếu > 0)
+    taxable_revenue = max(0, total_revenue - TAX_THRESHOLD)
+    
+    # Tỷ lệ thuế cho Hộ kinh doanh bán lẻ hàng hóa (Thông tư 40/2021/TT-BTC)
+    # Phân phối, cung cấp hàng hóa: GTGT 1%, TNCN 0.5%
     vat_gtgt = 1  # %
     pit_rate = 0.5  # % (thuế TNCN)
     
-    vat_gtgt_amount = total_revenue * vat_gtgt / 100
-    pit_amount = total_revenue * pit_rate / 100
+    # Tính thuế chỉ trên phần doanh thu vượt ngưỡng
+    vat_gtgt_amount = taxable_revenue * vat_gtgt / 100
+    pit_amount = taxable_revenue * pit_rate / 100
     total_tax = vat_gtgt_amount + pit_amount
     
     # Lấy settings
@@ -64,9 +70,10 @@ def declaration():
     return render_template('tax/declaration.html',
                          month=month,
                          year=year,
-                         method=method,
                          period=period,
                          total_revenue=total_revenue,
+                         taxable_revenue=taxable_revenue,
+                         tax_threshold=TAX_THRESHOLD,
                          total_orders=total_orders,
                          vat_gtgt=vat_gtgt,
                          vat_gtgt_amount=vat_gtgt_amount,
