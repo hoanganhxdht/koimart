@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}Upload sản phẩm - MiniMart{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h4 class="mb-0">Upload dữ liệu sản phẩm</h4>
+    <a href="{{ url_for('products.index') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Quay lại
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-cloud-upload me-2"></i>Tải lên file sản phẩm
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="mb-4">
+                        <label class="form-label">Chọn file (CSV hoặc Excel)</label>
+                        <input type="file" name="file" class="form-control form-control-lg" accept=".csv,.xlsx,.xls"
+                            required>
+                        <div class="form-text">
+                            Hỗ trợ định dạng: .csv, .xlsx, .xls
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-upload me-2"></i>Upload và xử lý
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-info-circle me-2"></i>Hướng dẫn
+            </div>
+            <div class="card-body">
+                <h6 class="fw-bold">Định dạng file:</h6>
+                <p>File cần có 5 cột theo thứ tự:</p>
+
+                <div class="table-responsive mb-3">
+                    <table class="table table-bordered table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Cột 1</th>
+                                <th>Cột 2</th>
+                                <th>Cột 3</th>
+                                <th>Cột 4</th>
+                                <th>Cột 5</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Tên sản phẩm</td>
+                                <td>Mã vạch</td>
+                                <td>Giá nhập</td>
+                                <td>Giá bán</td>
+                                <td>Số lượng</td>
+                            </tr>
+                            <tr class="table-secondary">
+                                <td>Coca Cola 390ml</td>
+                                <td>8934588012150</td>
+                                <td>7500</td>
+                                <td>10000</td>
+                                <td>50</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="alert alert-info mb-3">
+                    <i class="bi bi-lightbulb me-2"></i>
+                    <strong>Lưu ý:</strong>
+                    <ul class="mb-0 mt-2">
+                        <li>Dòng đầu tiên (header) sẽ được bỏ qua</li>
+                        <li>Nếu mã vạch đã tồn tại, sản phẩm sẽ được <strong>cập nhật</strong></li>
+                        <li>Nếu mã vạch chưa có, sản phẩm sẽ được <strong>thêm mới</strong></li>
+                    </ul>
+                </div>
+
+                <a href="{{ url_for('products.download_template') }}" class="btn btn-outline-success">
+                    <i class="bi bi-download me-2"></i>Tải file mẫu CSV
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

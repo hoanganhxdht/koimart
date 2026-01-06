@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}Cài đặt - KOI MART{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h4 class="mb-0"><i class="bi bi-gear me-2"></i>Cài đặt</h4>
+</div>
+
+<div class="row g-4">
+    <!-- Cài đặt tài khoản -->
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-person-circle me-2"></i>Cài đặt tài khoản</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100 border">
+                            <div class="card-body text-center">
+                                <i class="bi bi-person" style="font-size: 2.5rem; color: var(--primary-color);"></i>
+                                <h6 class="mt-2">Hồ sơ cá nhân</h6>
+                                <p class="text-muted small mb-2">Xem thông tin tài khoản</p>
+                                <a href="{{ url_for('auth.profile') }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye me-1"></i>Xem
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100 border">
+                            <div class="card-body text-center">
+                                <i class="bi bi-key" style="font-size: 2.5rem; color: var(--primary-color);"></i>
+                                <h6 class="mt-2">Đổi mật khẩu</h6>
+                                <p class="text-muted small mb-2">Thay đổi mật khẩu đăng nhập</p>
+                                <a href="{{ url_for('auth.profile') }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-pencil me-1"></i>Đổi
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cài đặt hệ thống -->
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-sliders me-2"></i>Cài đặt hệ thống</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6 col-lg-3">
+                        <div class="card h-100 border">
+                            <div class="card-body text-center">
+                                <i class="bi bi-shop" style="font-size: 2.5rem; color: var(--primary-color);"></i>
+                                <h6 class="mt-2">Thông tin cửa hàng</h6>
+                                <p class="text-muted small mb-2">Tên, địa chỉ, SĐT</p>
+                                <a href="{{ url_for('settings.store_info') }}" class="btn btn-sm btn-outline-success">
+                                    <i class="bi bi-gear me-1"></i>Cài đặt
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="card h-100 border">
+                            <div class="card-body text-center">
+                                <i class="bi bi-qr-code" style="font-size: 2.5rem; color: var(--primary-color);"></i>
+                                <h6 class="mt-2">Thanh toán</h6>
+                                <p class="text-muted small mb-2">QR, ngân hàng</p>
+                                <a href="{{ url_for('settings.payment') }}" class="btn btn-sm btn-outline-success">
+                                    <i class="bi bi-gear me-1"></i>Cài đặt
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="card h-100 border">
+                            <div class="card-body text-center">
+                                <i class="bi bi-receipt" style="font-size: 2.5rem; color: var(--primary-color);"></i>
+                                <h6 class="mt-2">Hoá đơn</h6>
+                                <p class="text-muted small mb-2">Tiền tố, footer</p>
+                                <a href="{{ url_for('settings.invoice') }}" class="btn btn-sm btn-outline-success">
+                                    <i class="bi bi-gear me-1"></i>Cài đặt
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="card h-100 border">
+                            <div class="card-body text-center">
+                                <i class="bi bi-percent" style="font-size: 2.5rem; color: var(--primary-color);"></i>
+                                <h6 class="mt-2">Thuế</h6>
+                                <p class="text-muted small mb-2">Thuế suất GTGT</p>
+                                <a href="{{ url_for('settings.tax') }}" class="btn btn-sm btn-outline-success">
+                                    <i class="bi bi-gear me-1"></i>Cài đặt
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Thông tin cửa hàng - KOI MART{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h4 class="mb-0">Thông tin cửa hàng</h4>
+    <a href="{{ url_for('settings.index') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Quay lại
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST" class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Tên cửa hàng <span class="text-danger">*</span></label>
+                <input type="text" name="store_name" class="form-control"
+                    value="{{ settings.get('store_name', 'KOI MART') }}" required>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Mã số thuế</label>
+                <input type="text" name="tax_code" class="form-control" value="{{ settings.get('tax_code', '') }}"
+                    placeholder="0123456789">
+            </div>
+
+            <div class="col-md-12">
+                <label class="form-label">Địa chỉ</label>
+                <input type="text" name="store_address" class="form-control"
+                    value="{{ settings.get('store_address', '') }}" placeholder="Địa chỉ đầy đủ">
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Số điện thoại</label>
+                <input type="text" name="store_phone" class="form-control" value="{{ settings.get('store_phone', '') }}"
+                    placeholder="0901234567">
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Email</label>
+                <input type="email" name="store_email" class="form-control"
+                    value="{{ settings.get('store_email', '') }}" placeholder="contact@koimart.vn">
+            </div>
+
+            <div class="col-12">
+                <hr>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-lg me-1"></i>Lưu thay đổi
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

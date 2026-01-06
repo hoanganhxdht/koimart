@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}Cài đặt hoá đơn - KOI MART{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h4 class="mb-0">Cài đặt hoá đơn</h4>
+    <a href="{{ url_for('settings.index') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Quay lại
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-receipt me-2"></i>Thông tin hoá đơn
+            </div>
+            <div class="card-body">
+                <form method="POST" class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Tiền tố mã hoá đơn</label>
+                        <input type="text" name="invoice_prefix" class="form-control"
+                            value="{{ settings.get('invoice_prefix', 'KM') }}" placeholder="KM" maxlength="5">
+                        <div class="form-text">VD: KM240101001</div>
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label">Nội dung footer hoá đơn</label>
+                        <textarea name="invoice_footer" class="form-control" rows="2"
+                            placeholder="Cảm ơn quý khách đã mua hàng!">{{ settings.get('invoice_footer', 'Cảm ơn quý khách đã mua hàng!') }}</textarea>
+                    </div>
+
+                    <div class="col-12">
+                        <hr>
+                        <h6 class="mb-3"><i class="bi bi-qr-code me-2"></i>Mã QR trên hoá đơn</h6>
+                    </div>
+
+                    <div class="col-md-12">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="show_qr_on_invoice" id="showQr" {% if
+                                settings.get('show_qr_on_invoice', 'true' )=='true' %}checked{% endif %}>
+                            <label class="form-check-label" for="showQr">
+                                <strong>Hiển thị QR thanh toán trên hoá đơn</strong>
+                            </label>
+                        </div>
+                        <div class="form-text">Khi bật, mã QR chuyển khoản ngân hàng sẽ được in trên bill</div>
+                    </div>
+
+                    <div class="col-md-12">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="show_logo_on_invoice" id="showLogo" {%
+                                if settings.get('show_logo_on_invoice', 'true' )=='true' %}checked{% endif %}>
+                            <label class="form-check-label" for="showLogo">
+                                <strong>Hiển thị Logo trên hoá đơn</strong>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <hr>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i>Lưu thay đổi
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-eye me-2"></i>Xem trước hoá đơn in nhiệt
+            </div>
+            <div class="card-body p-3"
+                style="font-family: 'Courier New', monospace; font-size: 11px; background: #fafafa;">
+                <div class="text-center border-bottom pb-2 mb-2">
+                    <img src="{{ url_for('static', filename='images/logo.png') }}" style="max-width: 80px;"
+                        class="mb-1"><br>
+                    <small>{{ settings.get('store_address', '123 Đường ABC, TP.HCM') }}</small><br>
+                    <small>ĐT: {{ settings.get('store_phone', '0901234567') }}</small>
+                </div>
+
+                <div class="text-center mb-2">
+                    <strong>HÓA ĐƠN BÁN HÀNG</strong><br>
+                    <small>{{ settings.get('invoice_prefix', 'KM') }}260106001</small><br>
+                    <small>06/01/2026 15:35</small>
+                </div>
+
+                <div class="border-top border-bottom py-2 mb-2" style="font-size: 10px;">
+                    Coca Cola 390ml x 2<br>
+                    <div class="text-end">20,000đ</div>
+                    Pepsi 390ml x 1<br>
+                    <div class="text-end">10,000đ</div>
+                </div>
+
+                <div class="d-flex justify-content-between fw-bold">
+                    <span>TỔNG CỘNG:</span>
+                    <span>30,000đ</span>
+                </div>
+
+                <!-- QR Code Preview -->
+                <div class="text-center mt-3 pt-2 border-top">
+                    <small class="text-muted">Quét mã để thanh toán</small><br>
+                    <img src="https://img.vietqr.io/image/TCB-{{ settings.get('bank_account', '1234567890') }}-compact2.png?amount=30000"
+                        style="max-width: 100px;" class="mt-1">
+                    <div style="font-size: 9px;" class="mt-1">
+                        {{ settings.get('bank_account_name', 'KOI MART') }}<br>
+                        {{ settings.get('bank_name', 'Techcombank') }}
+                    </div>
+                </div>
+
+                <div class="text-center mt-2 pt-2 border-top">
+                    <small><em>{{ settings.get('invoice_footer', 'Cảm ơn quý khách đã mua hàng!') }}</em></small>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert alert-info mt-3">
+            <i class="bi bi-info-circle me-2"></i>
+            <strong>Lưu ý:</strong> Mã QR được tạo tự động từ thông tin ngân hàng đã cài đặt ở phần "Thanh toán QR".
+            Số tiền sẽ hiển thị theo tổng đơn hàng thực tế.
+        </div>
+    </div>
+</div>
+{% endblock %}

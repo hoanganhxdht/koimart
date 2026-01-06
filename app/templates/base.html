@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Quản Lý Bán Hàng{% endblock %}</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <!-- Bootstrap & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- AOS Animation Library -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            /* Primary Colors */
+            --primary-color: #22c55e;
+            --primary-light: #4ade80;
+            --primary-dark: #16a34a;
+            --primary-gradient: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+
+            /* Secondary Colors */
+            --secondary-color: #0ea5e9;
+            --accent-color: #8b5cf6;
+
+            /* Status Colors */
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #06b6d4;
+
+            /* Neutral Colors */
+            --dark-color: #0f172a;
+            --light-color: #f8fafc;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+
+            /* Theme Colors (Light Mode) */
+            --bg-primary: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            --bg-card: rgba(255, 255, 255, 0.95);
+            --bg-sidebar: linear-gradient(180deg, #1e293b 0%, #0f172a 50%, #0c1222 100%);
+            --text-primary: #334155;
+            --text-secondary: #64748b;
+            --text-heading: #1e293b;
+            --border-color: #e2e8f0;
+
+            /* Effects */
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            --shadow-glow: 0 0 20px rgba(34, 197, 94, 0.3);
+
+            /* Border Radius */
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+
+            /* Transitions */
+            --transition-fast: 0.15s ease;
+            --transition-normal: 0.25s ease;
+            --transition-slow: 0.4s ease;
+        }
+
+        /* Dark Mode */
+        [data-theme="dark"] {
+            --bg-primary: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            --bg-card: rgba(30, 41, 59, 0.95);
+            --bg-sidebar: linear-gradient(180deg, #0f172a 0%, #020617 50%, #000 100%);
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --text-heading: #f1f5f9;
+            --border-color: #334155;
+            --gray-50: #1e293b;
+            --gray-100: #334155;
+            --gray-200: #475569;
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            background-attachment: fixed;
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6,
+        .h1,
+        .h2,
+        .h3,
+        .h4,
+        .h5,
+        .h6 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            color: var(--text-heading);
+        }
+
+        /* Enhanced Sidebar */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 270px;
+            background: var(--bg-sidebar);
+            padding: 1.25rem;
+            z-index: 1000;
+            transition: var(--transition-normal);
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 200px;
+            background: radial-gradient(ellipse at top left, rgba(34, 197, 94, 0.15) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .sidebar .brand {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: var(--radius-lg);
+            padding: 18px;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+        }
+
+        .sidebar .brand::after {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: var(--radius-lg);
+            background: var(--primary-gradient);
+            z-index: -1;
+            opacity: 0.5;
+        }
+
+        .sidebar .brand img {
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+        }
+
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.7);
+            padding: 0.85rem 1rem;
+            margin: 0.25rem 0;
+            border-radius: var(--radius-md);
+            transition: var(--transition-fast);
+            font-weight: 500;
+            font-size: 0.9rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar .nav-link::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--primary-color);
+            transform: scaleY(0);
+            transition: var(--transition-fast);
+            border-radius: 0 3px 3px 0;
+        }
+
+        .sidebar .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transform: translateX(3px);
+        }
+
+        .sidebar .nav-link:hover::before {
+            transform: scaleY(1);
+        }
+
+        .sidebar .nav-link.active {
+            background: var(--primary-gradient);
+            color: white;
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+        }
+
+        .sidebar .nav-link.active::before {
+            transform: scaleY(1);
+            background: white;
+        }
+
+        .sidebar .nav-link i {
+            margin-right: 12px;
+            width: 20px;
+            font-size: 1.1rem;
+        }
+
+        .main-content {
+            margin-left: 270px;
+            padding: 25px;
+            min-height: 100vh;
+        }
+
+        /* Enhanced Top Bar */
+        .top-bar {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 18px 28px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            margin-bottom: 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--border-color);
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+
+        .top-bar h4 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        /* Enhanced Cards */
+        .card {
+            border: none;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            background: var(--bg-card);
+            backdrop-filter: blur(5px);
+            transition: var(--transition-normal), background 0.3s ease;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .card-header {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+            padding: 16px 20px;
+            font-family: 'Outfit', sans-serif;
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        /* Enhanced Buttons */
+        .btn {
+            font-weight: 500;
+            border-radius: var(--radius-md);
+            padding: 10px 20px;
+            transition: var(--transition-fast);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            border: none;
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+            box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .btn-outline-primary {
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-outline-primary:hover {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+        }
+
+        /* Enhanced Stat Cards */
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            box-shadow: var(--shadow-md);
+            transition: var(--transition-normal), background 0.3s ease;
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(34, 197, 94, 0.1) 0%, transparent 70%);
+            border-radius: 0 var(--radius-lg) 0 100%;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .stat-card .icon {
+            width: 56px;
+            height: 56px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            color: var(--text-heading);
+            line-height: 1.2;
+        }
+
+        .stat-card .text-muted {
+            color: var(--text-secondary) !important;
+            font-size: 0.85rem;
+        }
+
+        /* Enhanced Tables */
+        .table {
+            margin-bottom: 0;
+        }
+
+        .table th {
+            font-weight: 600;
+            color: var(--gray-500);
+            border-bottom: 2px solid var(--gray-200);
+            padding: 14px 12px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .table td {
+            padding: 14px 12px;
+            vertical-align: middle;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .table tbody tr {
+            transition: var(--transition-fast);
+        }
+
+        .table tbody tr:hover {
+            background: var(--gray-50);
+        }
+
+        /* Enhanced Badges */
+        .badge {
+            font-weight: 500;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+        }
+
+        /* Form Controls */
+        .form-control,
+        .form-select {
+            border-radius: var(--radius-md);
+            border: 2px solid var(--gray-200);
+            padding: 10px 14px;
+            transition: var(--transition-fast);
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.15);
+        }
+
+        .input-group-text {
+            border-radius: var(--radius-md);
+            border: 2px solid var(--gray-200);
+            background: var(--gray-50);
+        }
+
+        /* Mobile Toggle Button */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 1100;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            font-size: 1.3rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .mobile-header {
+            display: none;
+        }
+
+        /* Mobile Bottom Navigation */
+        .mobile-bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            padding: 8px 0;
+            padding-bottom: calc(8px + env(safe-area-inset-bottom));
+        }
+
+        .mobile-bottom-nav .nav {
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .mobile-bottom-nav .nav-item {
+            flex: 1;
+            text-align: center;
+        }
+
+        .mobile-bottom-nav .nav-link {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #64748b;
+            font-size: 0.7rem;
+            padding: 5px;
+        }
+
+        .mobile-bottom-nav .nav-link i {
+            font-size: 1.4rem;
+            margin-bottom: 2px;
+        }
+
+        .mobile-bottom-nav .nav-link.active {
+            color: var(--primary-color);
+        }
+
+        /* Overlay khi mở sidebar mobile */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        @media (max-width: 991px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 280px;
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.show {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 15px;
+                padding-top: 70px;
+                padding-bottom: 80px;
+            }
+
+            .mobile-menu-btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .mobile-header {
+                display: flex;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 60px;
+                background: white;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                z-index: 900;
+                align-items: center;
+                justify-content: center;
+                padding: 0 60px;
+            }
+
+            .mobile-header img {
+                height: 40px;
+            }
+
+            .mobile-bottom-nav {
+                display: block;
+            }
+
+            .top-bar {
+                flex-direction: column;
+                gap: 10px;
+                padding: 15px;
+            }
+
+            .top-bar h4 {
+                font-size: 1.1rem;
+            }
+
+            .stat-card {
+                padding: 15px;
+            }
+
+            .stat-card .value {
+                font-size: 1.3rem;
+            }
+
+            .card-body {
+                padding: 15px;
+            }
+
+            .table-responsive {
+                font-size: 0.85rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .main-content {
+                padding: 10px;
+                padding-top: 65px;
+                padding-bottom: 75px;
+            }
+
+            .top-bar {
+                padding: 12px;
+                margin-bottom: 15px;
+            }
+
+            .btn {
+                padding: 8px 12px;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Dark Mode Toggle */
+        .theme-toggle {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 2px solid var(--border-color);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.2rem;
+        }
+
+        .theme-toggle:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            transform: rotate(15deg);
+        }
+
+        [data-theme="dark"] .theme-toggle .bi-moon-fill {
+            display: none;
+        }
+
+        [data-theme="dark"] .theme-toggle .bi-sun-fill {
+            display: inline;
+        }
+
+        .theme-toggle .bi-sun-fill {
+            display: none;
+        }
+
+        /* Table Dark Mode */
+        [data-theme="dark"] .table {
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .table th,
+        [data-theme="dark"] .table td {
+            border-color: var(--border-color);
+        }
+
+        [data-theme="dark"] .table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Form Controls Dark Mode */
+        [data-theme="dark"] .form-control,
+        [data-theme="dark"] .form-select {
+            background: var(--gray-100);
+            border-color: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .form-control:focus,
+        [data-theme="dark"] .form-select:focus {
+            background: var(--gray-50);
+        }
+
+        /* Alert Dark Mode */
+        [data-theme="dark"] .alert {
+            background: var(--bg-card);
+            border-color: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        /* List Group Dark Mode */
+        [data-theme="dark"] .list-group-item {
+            background: transparent;
+            border-color: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        /* Mobile Bottom Nav Dark Mode */
+        [data-theme="dark"] .mobile-bottom-nav {
+            background: var(--gray-900);
+            border-top: 1px solid var(--border-color);
+        }
+
+        [data-theme="dark"] .mobile-header {
+            background: var(--gray-900);
+            border-bottom: 1px solid var(--border-color);
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    {% if current_user.is_authenticated %}
+
+    <!-- Mobile Header -->
+    <div class="mobile-header">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="KOIMart">
+    </div>
+
+    <!-- Mobile Menu Toggle Button -->
+    <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleSidebar()">
+        <i class="bi bi-list"></i>
+    </button>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="brand text-center">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="KOIMart"
+                style="max-width: 120px; margin-bottom: 5px;">
+        </div>
+        <ul class="nav flex-column mt-4">
+            <li class="nav-item">
+                <a class="nav-link {% if request.endpoint == 'main.dashboard' %}active{% endif %}"
+                    href="{{ url_for('main.dashboard') }}">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a>
+            </li>
+
+            <!-- Menu Bán hàng với submenu -->
+            <li class="nav-item">
+                <a class="nav-link d-flex justify-content-between align-items-center {% if 'sales' in request.endpoint %}active{% endif %}"
+                    data-bs-toggle="collapse" href="#salesMenu" role="button"
+                    aria-expanded="{% if 'sales' in request.endpoint %}true{% else %}false{% endif %}">
+                    <span><i class="bi bi-cart3"></i> Bán hàng</span>
+                    <i class="bi bi-chevron-down small"></i>
+                </a>
+                <div class="collapse {% if 'sales' in request.endpoint %}show{% endif %}" id="salesMenu">
+                    <ul class="nav flex-column ms-3">
+                        <li class="nav-item">
+                            <a class="nav-link py-2 {% if request.endpoint == 'sales.pos' %}text-white{% endif %}"
+                                href="{{ url_for('sales.pos') }}">
+                                <i class="bi bi-plus-circle"></i> Tạo đơn hàng mới
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link py-2 {% if request.endpoint == 'sales.order_list' %}text-white{% endif %}"
+                                href="{{ url_for('sales.order_list') }}">
+                                <i class="bi bi-list-ul"></i> Danh sách đơn hàng
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link py-2 {% if request.endpoint == 'sales.einvoices' %}text-white{% endif %}"
+                                href="{{ url_for('sales.einvoices') }}">
+                                <i class="bi bi-file-earmark-text"></i> Hoá đơn điện tử
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link {% if 'products' in request.endpoint and 'inventory' not in request.endpoint %}active{% endif %}"
+                    href="{{ url_for('products.index') }}">
+                    <i class="bi bi-box-seam"></i> Sản phẩm
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'inventory' in request.endpoint %}active{% endif %}"
+                    href="{{ url_for('products.inventory') }}">
+                    <i class="bi bi-archive"></i> Kho hàng
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'reports' in request.endpoint %}active{% endif %}"
+                    href="{{ url_for('reports.index') }}">
+                    <i class="bi bi-graph-up"></i> Báo cáo
+                </a>
+            </li>
+
+            <!-- Menu Hoá đơn bán hàng -->
+            <li class="nav-item">
+                <a class="nav-link {% if request.endpoint == 'sales.order_list' %}active{% endif %}"
+                    href="{{ url_for('sales.order_list') }}">
+                    <i class="bi bi-receipt-cutoff"></i> Hoá đơn bán hàng
+                </a>
+            </li>
+
+            <!-- Menu Kê khai thuế với submenu -->
+            <li class="nav-item">
+                <a class="nav-link d-flex justify-content-between align-items-center {% if 'tax' in request.endpoint %}active{% endif %}"
+                    data-bs-toggle="collapse" href="#taxMenu" role="button"
+                    aria-expanded="{% if 'tax' in request.endpoint %}true{% else %}false{% endif %}">
+                    <span><i class="bi bi-file-earmark-ruled"></i> Kê khai thuế</span>
+                    <i class="bi bi-chevron-down small"></i>
+                </a>
+                <div class="collapse {% if 'tax' in request.endpoint %}show{% endif %}" id="taxMenu">
+                    <ul class="nav flex-column ms-3">
+                        <li class="nav-item">
+                            <a class="nav-link py-2 {% if request.endpoint == 'tax.declaration' %}text-white{% endif %}"
+                                href="{{ url_for('tax.declaration') }}">
+                                <i class="bi bi-file-text"></i> Lập tờ khai thuế
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link py-2 {% if request.endpoint == 'tax.input_invoices' %}text-white{% endif %}"
+                                href="{{ url_for('tax.input_invoices') }}">
+                                <i class="bi bi-file-earmark-arrow-down"></i> Hoá đơn đầu vào
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+
+            <!-- Menu Cài đặt (link đơn) -->
+            <li class="nav-item mt-3">
+                <a class="nav-link {% if 'settings' in request.endpoint or 'auth.profile' in request.endpoint %}active{% endif %}"
+                    href="{{ url_for('settings.index') }}">
+                    <i class="bi bi-gear"></i> Cài đặt
+                </a>
+            </li>
+        </ul>
+
+        <div class="mt-auto pt-4" style="position: absolute; bottom: 20px; left: 20px; right: 20px;">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <div class="text-white-50 small">
+                    <i class="bi bi-person-circle"></i> {{ current_user.fullname or current_user.username }}
+                </div>
+                <button class="theme-toggle" onclick="toggleTheme()" title="Chuyển đổi giao diện">
+                    <i class="bi bi-moon-fill"></i>
+                    <i class="bi bi-sun-fill"></i>
+                </button>
+            </div>
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-light btn-sm w-100">
+                <i class="bi bi-box-arrow-left"></i> Đăng xuất
+            </a>
+        </div>
+
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-bottom-nav">
+        <ul class="nav">
+            <li class="nav-item">
+                <a class="nav-link {% if request.endpoint == 'main.dashboard' %}active{% endif %}"
+                    href="{{ url_for('main.dashboard') }}">
+                    <i class="bi bi-house-door"></i>
+                    <span>Trang chủ</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'sales.pos' in request.endpoint %}active{% endif %}"
+                    href="{{ url_for('sales.pos') }}">
+                    <i class="bi bi-cart-plus"></i>
+                    <span>Bán hàng</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'products' in request.endpoint %}active{% endif %}"
+                    href="{{ url_for('products.index') }}">
+                    <i class="bi bi-box-seam"></i>
+                    <span>Sản phẩm</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'sales.order_list' in request.endpoint %}active{% endif %}"
+                    href="{{ url_for('sales.order_list') }}">
+                    <i class="bi bi-receipt"></i>
+                    <span>Hoá đơn</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'auth.profile' in request.endpoint or 'auth.change_password' in request.endpoint %}active{% endif %}"
+                    href="{{ url_for('auth.profile') }}">
+                    <i class="bi bi-person-circle"></i>
+                    <span>Tài khoản</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    {% else %}
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show mt-3" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        {% block auth_content %}{% endblock %}
+    </div>
+    {% endif %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- AOS Animation -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        // Initialize AOS animations
+        AOS.init({
+            duration: 600,
+            once: true,
+            offset: 50
+        });
+
+        // Dark Mode Toggle
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+
+        // Load saved theme on page load
+        (function () {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+
+        // Mobile sidebar toggle functions
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('show');
+            document.getElementById('sidebarOverlay').classList.toggle('show');
+        }
+
+        function closeSidebar() {
+            document.querySelector('.sidebar').classList.remove('show');
+            document.getElementById('sidebarOverlay').classList.remove('show');
+        }
+
+        // Close sidebar when clicking a nav link on mobile
+        document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+            link.addEventListener('click', function () {
+                if (window.innerWidth <= 991) {
+                    closeSidebar();
+                }
+            });
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

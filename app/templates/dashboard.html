@@ -1,0 +1,289 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - KOI MART{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h4 class="mb-0">Dashboard</h4>
+    <span class="text-muted">{{ now().strftime('%d/%m/%Y') if now is defined else '' }}</span>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-6 col-xl-3" data-aos="fade-up" data-aos-delay="0">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-muted small mb-1">Đơn hàng hôm nay</div>
+                    <div class="value counter" data-target="{{ stats.today_orders }}">0</div>
+                </div>
+                <div class="icon bg-primary bg-opacity-10 text-primary">
+                    <i class="bi bi-cart-check"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-3" data-aos="fade-up" data-aos-delay="100">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-muted small mb-1">Doanh thu hôm nay</div>
+                    <div class="value counter-money" data-target="{{ stats.today_revenue }}">0đ</div>
+                </div>
+                <div class="icon bg-success bg-opacity-10 text-success">
+                    <i class="bi bi-currency-dollar"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-3" data-aos="fade-up" data-aos-delay="200">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-muted small mb-1">Tổng sản phẩm</div>
+                    <div class="value counter" data-target="{{ stats.total_products }}">0</div>
+                </div>
+                <div class="icon bg-info bg-opacity-10 text-info">
+                    <i class="bi bi-box-seam"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-3" data-aos="fade-up" data-aos-delay="300">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-muted small mb-1">Sắp hết hàng</div>
+                    <div class="value text-warning counter" data-target="{{ stats.low_stock_products }}">0</div>
+                </div>
+                <div class="icon bg-warning bg-opacity-10 text-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Revenue Chart -->
+<div class="row g-4 mb-4">
+    <div class="col-12" data-aos="fade-up" data-aos-delay="400">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center py-3">
+                <span><i class="bi bi-graph-up me-2"></i>Biểu đồ doanh thu 7 ngày qua</span>
+            </div>
+            <div class="card-body">
+                <canvas id="revenueChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8" data-aos="fade-up" data-aos-delay="500">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center py-3">
+                <span>Đơn hàng gần đây</span>
+                <a href="{{ url_for('sales.order_list') }}" class="btn btn-sm btn-outline-primary">Xem tất cả</a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Mã HĐ</th>
+                                <th>Thời gian</th>
+                                <th>Khách hàng</th>
+                                <th>Tổng tiền</th>
+                                <th>Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in recent_orders %}
+                            <tr>
+                                <td><a href="{{ url_for('sales.order_detail', id=order.id) }}">{{ order.order_code
+                                        }}</a></td>
+                                <td>{{ order.created_at.strftime('%H:%M %d/%m') }}</td>
+                                <td>{{ order.customer.name if order.customer else 'Khách lẻ' }}</td>
+                                <td class="fw-semibold">{{ "{:,.0f}".format(order.total_amount) }}đ</td>
+                                <td>
+                                    {% if order.payment_status == 'paid' %}
+                                    <span class="badge bg-success">Đã thanh toán</span>
+                                    {% else %}
+                                    <span class="badge bg-warning">Chờ xử lý</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">Chưa có đơn hàng</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4" data-aos="fade-up" data-aos-delay="600">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center py-3">
+                <span>Sản phẩm sắp hết</span>
+                <a href="{{ url_for('products.inventory') }}?low_stock=1" class="btn btn-sm btn-outline-warning">Xem tất
+                    cả</a>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    {% for product in low_stock %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <div>
+                            <div class="fw-semibold">{{ product.name }}</div>
+                            <small class="text-muted">Tồn: {{ product.stock }} {{ product.unit }}</small>
+                        </div>
+                        <span class="badge bg-danger">{{ product.stock }}</span>
+                    </li>
+                    {% else %}
+                    <li class="list-group-item text-center text-muted">Không có sản phẩm sắp hết</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Counter animation for stat cards
+    function animateCounters() {
+        const counters = document.querySelectorAll('.counter');
+        counters.forEach(counter => {
+            const target = parseInt(counter.getAttribute('data-target'));
+            const duration = 1500;
+            const step = target / (duration / 16);
+            let current = 0;
+
+            const updateCounter = () => {
+                current += step;
+                if (current < target) {
+                    counter.textContent = Math.floor(current);
+                    requestAnimationFrame(updateCounter);
+                } else {
+                    counter.textContent = target;
+                }
+            };
+            updateCounter();
+        });
+
+        const moneyCounters = document.querySelectorAll('.counter-money');
+        moneyCounters.forEach(counter => {
+            const target = parseFloat(counter.getAttribute('data-target'));
+            const duration = 1500;
+            const step = target / (duration / 16);
+            let current = 0;
+
+            const updateCounter = () => {
+                current += step;
+                if (current < target) {
+                    counter.textContent = new Intl.NumberFormat('vi-VN').format(Math.floor(current)) + 'đ';
+                    requestAnimationFrame(updateCounter);
+                } else {
+                    counter.textContent = new Intl.NumberFormat('vi-VN').format(target) + 'đ';
+                }
+            };
+            updateCounter();
+        });
+    }
+
+    // Revenue Chart
+    const chartData = {{ chart_data | tojson | safe }};
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+
+    // Check current theme for chart colors
+    const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
+    const textColor = isDarkMode ? '#e2e8f0' : '#64748b';
+    const gridColor = isDarkMode ? '#334155' : '#e2e8f0';
+
+    const revenueChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartData.labels,
+            datasets: [{
+                label: 'Doanh thu (VNĐ)',
+                data: chartData.revenue,
+                borderColor: '#22c55e',
+                backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 6,
+                pointBackgroundColor: '#22c55e',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointHoverRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: isDarkMode ? '#1e293b' : '#fff',
+                    titleColor: isDarkMode ? '#f1f5f9' : '#1e293b',
+                    bodyColor: isDarkMode ? '#e2e8f0' : '#64748b',
+                    borderColor: isDarkMode ? '#334155' : '#e2e8f0',
+                    borderWidth: 1,
+                    padding: 12,
+                    cornerRadius: 8,
+                    displayColors: false,
+                    callbacks: {
+                        label: function (context) {
+                            return new Intl.NumberFormat('vi-VN').format(context.raw) + ' VNĐ';
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: textColor
+                    }
+                },
+                y: {
+                    grid: {
+                        color: gridColor
+                    },
+                    ticks: {
+                        color: textColor,
+                        callback: function (value) {
+                            if (value >= 1000000) {
+                                return (value / 1000000).toFixed(1) + 'M';
+                            } else if (value >= 1000) {
+                                return (value / 1000).toFixed(0) + 'K';
+                            }
+                            return value;
+                        }
+                    }
+                }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            }
+        }
+    });
+
+    // Run counter animation when page loads
+    document.addEventListener('DOMContentLoaded', function () {
+        setTimeout(animateCounters, 300);
+    });
+</script>
+{% endblock %}

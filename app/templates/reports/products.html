@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Sản phẩm bán chạy - MiniMart{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h4 class="mb-0">Sản phẩm bán chạy</h4>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form class="row g-3" method="GET">
+            <div class="col-md-4">
+                <label class="form-label">Từ ngày</label>
+                <input type="date" name="start_date" class="form-control" value="{{ start_date }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Đến ngày</label>
+                <input type="date" name="end_date" class="form-control" value="{{ end_date }}">
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-funnel me-1"></i>Lọc
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">Top 20 sản phẩm bán chạy</div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Sản phẩm</th>
+                        <th>Số lượng bán</th>
+                        <th>Doanh thu</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in top_products %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td class="fw-semibold">{{ row.name }}</td>
+                        <td>{{ row.total_qty }}</td>
+                        <td class="text-success">{{ "{:,.0f}".format(row.total_revenue or 0) }}đ</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-4">Không có dữ liệu</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

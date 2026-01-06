@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Hoá đơn {{ order.order_code }} - KOI MART</title>
+    <style>
+        @page {
+            size: 80mm auto;
+            margin: 0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            width: 80mm;
+            padding: 3mm;
+            background: white;
+            line-height: 1.4;
+        }
+
+        .header {
+            text-align: center;
+            padding-bottom: 8px;
+            border-bottom: 1px dashed #000;
+            margin-bottom: 8px;
+        }
+
+        .logo {
+            max-width: 50mm;
+            margin-bottom: 3px;
+        }
+
+        .store-name {
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .store-info {
+            font-size: 10px;
+            color: #333;
+        }
+
+        .invoice-title {
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 8px 0;
+            letter-spacing: 1px;
+        }
+
+        .invoice-meta {
+            font-size: 11px;
+            margin-bottom: 8px;
+        }
+
+        .invoice-meta table {
+            width: 100%;
+        }
+
+        .invoice-meta td {
+            padding: 2px 0;
+        }
+
+        .invoice-meta .label {
+            color: #666;
+        }
+
+        /* Bảng sản phẩm */
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 8px 0;
+            font-size: 11px;
+        }
+
+        .items-table th {
+            border-top: 1px solid #000;
+            border-bottom: 1px solid #000;
+            padding: 4px 2px;
+            text-align: left;
+            font-weight: bold;
+            background: #f5f5f5;
+        }
+
+        .items-table td {
+            padding: 3px 2px;
+            border-bottom: 1px dotted #ccc;
+            vertical-align: top;
+        }
+
+        .items-table .col-name {
+            width: 40%;
+        }
+
+        .items-table .col-qty {
+            width: 10%;
+            text-align: center;
+        }
+
+        .items-table .col-unit {
+            width: 12%;
+            text-align: center;
+        }
+
+        .items-table .col-price {
+            width: 19%;
+            text-align: right;
+        }
+
+        .items-table .col-total {
+            width: 19%;
+            text-align: right;
+        }
+
+        .items-table tfoot td {
+            border-top: 1px solid #000;
+            border-bottom: none;
+            font-weight: bold;
+            padding-top: 5px;
+        }
+
+        /* Tổng cộng */
+        .totals {
+            margin: 8px 0;
+            font-size: 11px;
+        }
+
+        .totals-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 0;
+        }
+
+        .totals-row.grand {
+            font-size: 14px;
+            font-weight: bold;
+            border-top: 1px solid #000;
+            border-bottom: 1px solid #000;
+            padding: 5px 0;
+            margin: 5px 0;
+        }
+
+        /* Thông tin khách hàng / điểm */
+        .customer-info {
+            font-size: 10px;
+            margin: 8px 0;
+            padding: 5px;
+            background: #f9f9f9;
+            border-radius: 3px;
+        }
+
+        .customer-info .row {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 0;
+        }
+
+        /* QR Code */
+        .qr-section {
+            text-align: center;
+            padding: 10px 0;
+            border-top: 1px dashed #000;
+            margin-top: 8px;
+        }
+
+        .qr-section .qr-title {
+            font-size: 10px;
+            margin-bottom: 5px;
+        }
+
+        .qr-section img {
+            max-width: 45mm;
+        }
+
+        .qr-section .bank-info {
+            font-size: 9px;
+            margin-top: 3px;
+            color: #666;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding-top: 8px;
+            border-top: 1px dashed #000;
+            margin-top: 8px;
+            font-size: 11px;
+            font-style: italic;
+        }
+
+        /* Print button */
+        .print-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            border: none;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 10px;
+            border-radius: 8px;
+        }
+
+        .print-btn:hover {
+            background: linear-gradient(135deg, #16a34a, #15803d);
+        }
+
+        @media print {
+            body {
+                width: 80mm;
+                padding: 2mm;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <button class="print-btn no-print" onclick="window.print()">
+        🖨️ In hoá đơn
+    </button>
+
+    <!-- Header -->
+    <div class="header">
+        {% if settings.get('show_logo_on_invoice', 'true') == 'true' %}
+        <img src="{{ url_for('static', filename='images/logo.png', _external=True) }}" alt="Logo" class="logo"><br>
+        {% else %}
+        <div class="store-name">{{ settings.get('store_name', 'KOI MART') }}</div>
+        {% endif %}
+        <div class="store-info">
+            ĐC: {{ settings.get('store_address', '123 Đường ABC, TP.HCM') }}<br>
+            ĐT: {{ settings.get('store_phone', '0901234567') }}
+        </div>
+    </div>
+
+    <!-- Tiêu đề -->
+    <div class="invoice-title">HÓA ĐƠN BÁN HÀNG</div>
+
+    <!-- Thông tin hoá đơn -->
+    <div class="invoice-meta">
+        <table>
+            <tr>
+                <td class="label">Ngày:</td>
+                <td>{{ order.created_at.strftime('%d/%m/%Y') }}</td>
+                <td class="label">Số phiếu:</td>
+                <td style="text-align: right;"><strong>{{ order.order_code }}</strong></td>
+            </tr>
+            <tr>
+                <td class="label">Thu ngân:</td>
+                <td>{{ order.user.fullname or order.user.username }}</td>
+                <td class="label">In lúc:</td>
+                <td style="text-align: right;">{{ order.created_at.strftime('%H:%M') }}</td>
+            </tr>
+            {% if order.customer %}
+            <tr>
+                <td class="label">Khách hàng:</td>
+                <td colspan="3"><strong>{{ order.customer.name }}</strong></td>
+            </tr>
+            {% endif %}
+        </table>
+    </div>
+
+    <!-- Bảng sản phẩm -->
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th class="col-name">Mặt hàng</th>
+                <th class="col-qty">SL</th>
+                <th class="col-unit">ĐVT</th>
+                <th class="col-price">Giá</th>
+                <th class="col-total">T.tiền</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in order.items %}
+            <tr>
+                <td class="col-name">{{ item.product.name }}</td>
+                <td class="col-qty">{{ item.quantity }}</td>
+                <td class="col-unit">{{ item.product.unit or 'cái' }}</td>
+                <td class="col-price">{{ "{:,.0f}".format(item.price) }}</td>
+                <td class="col-total">{{ "{:,.0f}".format(item.quantity * item.price) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="2"><strong>Tổng SL:</strong></td>
+                <td style="text-align: center;">{{ order.items | sum(attribute='quantity') }}</td>
+                <td colspan="2"></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <!-- Tổng cộng -->
+    <div class="totals">
+        <div class="totals-row">
+            <span>Tiền hàng:</span>
+            <span>{{ "{:,.0f}".format(order.subtotal) }}</span>
+        </div>
+        {% if order.discount > 0 %}
+        <div class="totals-row">
+            <span>Giảm giá:</span>
+            <span>-{{ "{:,.0f}".format(order.discount) }}</span>
+        </div>
+        {% endif %}
+        <div class="totals-row grand">
+            <span>Tổng:</span>
+            <span>{{ "{:,.0f}".format(order.total_amount) }}</span>
+        </div>
+        <div class="totals-row">
+            <span>Khách đưa:</span>
+            <span>{{ "{:,.0f}".format(order.total_amount) }}</span>
+        </div>
+    </div>
+
+    <!-- Thông tin khách hàng / Điểm tích lũy -->
+    {% if order.customer %}
+    <div class="customer-info">
+        <div class="row">
+            <span>Điểm trên hoá đơn:</span>
+            <span><strong>{{ (order.total_amount / 10000)|int }}</strong></span>
+        </div>
+        <div class="row">
+            <span>Tổng tích lũy:</span>
+            <span><strong>{{ "{:,}".format(order.customer.points) }}</strong></span>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- QR Code thanh toán -->
+    {% if settings.get('show_qr_on_invoice', 'true') == 'true' and settings.get('bank_account') %}
+    <div class="qr-section">
+        <div class="qr-title">
+            <strong>Quét mã để chuyển tiền</strong>
+        </div>
+
+        {% set bank_codes = {
+        'Techcombank': 'TCB',
+        'Vietcombank': 'VCB',
+        'MB Bank': 'MB',
+        'BIDV': 'BIDV',
+        'Agribank': 'VBA',
+        'VPBank': 'VPB',
+        'ACB': 'ACB',
+        'Sacombank': 'STB',
+        'TPBank': 'TPB'
+        } %}
+        {% set bank_code = bank_codes.get(settings.get('bank_name', 'Techcombank'), 'TCB') %}
+
+        <img src="https://img.vietqr.io/image/{{ bank_code }}-{{ settings.get('bank_account', '') }}-compact2.png?amount={{ order.total_amount|int }}&addInfo={{ order.order_code }}&accountName={{ settings.get('bank_account_name', '')|urlencode }}"
+            alt="QR Payment">
+
+        <div class="bank-info">
+            {{ settings.get('bank_account_name', 'KOI MART') }}<br>
+            {{ settings.get('bank_name', 'Techcombank') }} - {{ settings.get('bank_account', '') }}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Footer -->
+    <div class="footer">
+        {{ settings.get('invoice_footer', 'Xin cảm ơn Quý khách/ Thank you!') }}
+    </div>
+</body>
+
+</html>

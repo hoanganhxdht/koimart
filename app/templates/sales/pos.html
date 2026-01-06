@@ -1,0 +1,690 @@
+{% extends 'base.html' %}
+
+{% block title %}Bán hàng - KOI MART{% endblock %}
+
+{% block extra_css %}
+<style>
+    .pos-container {
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: 15px;
+        height: calc(100vh - 100px);
+    }
+
+    .product-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        gap: 12px;
+        max-height: calc(100vh - 180px);
+        overflow-y: auto;
+        padding: 10px;
+    }
+
+    .product-item {
+        background: white;
+        border-radius: 12px;
+        padding: 12px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 2px solid transparent;
+    }
+
+    .product-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        border-color: var(--primary-color);
+    }
+
+    .product-item .name {
+        font-weight: 600;
+        font-size: 0.85rem;
+        margin-bottom: 5px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .product-item .price {
+        color: var(--primary-color);
+        font-weight: 700;
+        font-size: 0.9rem;
+    }
+
+    .product-item .stock {
+        font-size: 0.7rem;
+        color: #64748b;
+    }
+
+    .cart-panel {
+        background: white;
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .cart-header {
+        padding: 15px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .cart-items {
+        flex: 1;
+        overflow-y: auto;
+        padding: 10px;
+    }
+
+    .cart-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        background: #f8fafc;
+        border-radius: 8px;
+        margin-bottom: 8px;
+    }
+
+    .cart-item .qty-control {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .cart-item .qty-control button {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        border: 1px solid #e2e8f0;
+        background: white;
+        font-size: 1.1rem;
+    }
+
+    .cart-footer {
+        padding: 15px;
+        border-top: 1px solid #e2e8f0;
+    }
+
+    .cart-total {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary-color);
+    }
+
+    /* Mobile cart floating button */
+    .mobile-cart-btn {
+        display: none;
+        position: fixed;
+        bottom: 90px;
+        right: 15px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        font-size: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        z-index: 100;
+    }
+
+    .mobile-cart-btn .badge {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background: #ef4444;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        font-size: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Invoice Modal */
+    .invoice-modal .modal-body {
+        max-height: 70vh;
+        overflow-y: auto;
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+    }
+
+    .invoice-preview {
+        background: #fafafa;
+        padding: 15px;
+        border-radius: 8px;
+    }
+
+    /* Responsive */
+    @media (max-width: 991px) {
+        .pos-container {
+            grid-template-columns: 1fr;
+            height: auto;
+        }
+
+        .product-grid {
+            grid-template-columns: repeat(3, 1fr);
+            max-height: none;
+            gap: 8px;
+        }
+
+        .cart-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 70vh;
+            border-radius: 20px 20px 0 0;
+            transform: translateY(100%);
+            transition: transform 0.3s;
+            z-index: 1050;
+            box-shadow: 0 -5px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .cart-panel.show {
+            transform: translateY(0);
+        }
+
+        .mobile-cart-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cart-header {
+            cursor: pointer;
+            padding: 10px 15px;
+        }
+
+        .cart-header::before {
+            content: '';
+            display: block;
+            width: 40px;
+            height: 4px;
+            background: #ccc;
+            border-radius: 2px;
+            margin: 0 auto 10px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .product-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .product-item {
+            padding: 10px;
+        }
+
+        .product-item .name {
+            font-size: 0.8rem;
+        }
+
+        .product-item .price {
+            font-size: 0.85rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pos-container">
+    <div>
+        <div class="card mb-3">
+            <div class="card-body py-2">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" id="searchProduct" class="form-control border-start-0 border-end-0"
+                        placeholder="Tìm sản phẩm hoặc quét mã vạch..." autofocus>
+                    <button class="btn btn-outline-primary" type="button" onclick="openBarcodeScanner()"
+                        title="Quét mã vạch bằng camera">
+                        <i class="bi bi-upc-scan"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="product-grid" id="productGrid">
+            {% for product in products %}
+            <div class="product-item"
+                onclick="addToCart({{ product.id }}, '{{ product.name }}', {{ product.price }}, {{ product.stock }}, '{{ product.unit }}')"
+                data-id="{{ product.id }}" data-barcode="{{ product.barcode }}">
+                <div class="name" title="{{ product.name }}">{{ product.name }}</div>
+                <div class="price">{{ "{:,.0f}".format(product.price) }}đ</div>
+                <div class="stock">Còn: {{ product.stock }} {{ product.unit }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="cart-panel" id="cartPanel">
+        <div class="cart-header" onclick="toggleMobileCart()">
+            <h5 class="mb-0"><i class="bi bi-cart3 me-2"></i>Giỏ hàng <span id="cartCount"
+                    class="badge bg-primary ms-2">0</span></h5>
+        </div>
+
+        <div class="cart-items" id="cartItems">
+            <div class="text-center text-muted py-4" id="emptyCart">
+                <i class="bi bi-cart-x" style="font-size: 2.5rem;"></i>
+                <p class="mt-2 mb-0">Chưa có sản phẩm</p>
+            </div>
+        </div>
+
+        <div class="cart-footer">
+            <div class="mb-2">
+                <label class="form-label small mb-1">Khách hàng</label>
+                <select class="form-select form-select-sm" id="customerId">
+                    <option value="">-- Khách lẻ --</option>
+                    {% for customer in customers %}
+                    <option value="{{ customer.id }}">{{ customer.name }} - {{ customer.phone }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span>Tổng cộng:</span>
+                <span class="cart-total" id="cartTotal">0đ</span>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button class="btn btn-primary btn-lg" onclick="checkout()">
+                    <i class="bi bi-credit-card me-2"></i>Thanh toán
+                </button>
+                <button class="btn btn-outline-danger btn-sm" onclick="clearCart()">
+                    <i class="bi bi-trash me-1"></i>Xóa giỏ hàng
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Mobile Cart Button -->
+<button class="mobile-cart-btn" id="mobileCartBtn" onclick="toggleMobileCart()">
+    <i class="bi bi-cart3"></i>
+    <span class="badge" id="mobileCartBadge">0</span>
+</button>
+
+<!-- Invoice Modal -->
+<div class="modal fade" id="invoiceModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="bi bi-check-circle me-2"></i>Thanh toán thành công!</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="invoice-preview" id="invoicePreview">
+                    <!-- Invoice content will be loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg me-1"></i>Đóng
+                </button>
+                <a href="#" class="btn btn-primary" id="printInvoiceBtn" target="_blank">
+                    <i class="bi bi-printer me-1"></i>In hoá đơn
+                </a>
+                <button type="button" class="btn btn-success" onclick="newOrder()">
+                    <i class="bi bi-plus-lg me-1"></i>Đơn mới
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Barcode Scanner Modal -->
+<div class="modal fade" id="barcodeScannerModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="bi bi-upc-scan me-2"></i>Quét mã vạch</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    onclick="stopBarcodeScanner()"></button>
+            </div>
+            <div class="modal-body p-3">
+                <div id="barcode-scanner-container"
+                    style="width: 100%; min-height: 300px; background: #000; border-radius: 8px; overflow: hidden;">
+                    <div id="barcode-reader" style="width: 100%;"></div>
+                </div>
+                <div id="scanner-status" class="text-center mt-3">
+                    <i class="bi bi-camera-video text-primary" style="font-size: 1.5rem;"></i>
+                    <p class="text-muted mb-0 mt-2">Đang khởi động camera...</p>
+                </div>
+                <div id="scanner-result" class="alert alert-success d-none mt-3">
+                    <i class="bi bi-check-circle me-2"></i>
+                    <span id="scanned-code"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="stopBarcodeScanner()">
+                    <i class="bi bi-x-lg me-1"></i>Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- html5-qrcode library for barcode scanning -->
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+{% block extra_js %}
+<script>
+    let cart = [];
+    let invoiceModal;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        invoiceModal = new bootstrap.Modal(document.getElementById('invoiceModal'));
+    });
+
+    function addToCart(id, name, price, stock, unit) {
+        const existing = cart.find(item => item.id === id);
+
+        if (existing) {
+            if (existing.quantity >= stock) {
+                alert('Không đủ hàng trong kho!');
+                return;
+            }
+            existing.quantity++;
+        } else {
+            cart.push({ id, name, price, stock, unit, quantity: 1 });
+        }
+
+        renderCart();
+    }
+
+    function updateQuantity(id, delta) {
+        const item = cart.find(i => i.id === id);
+        if (!item) return;
+
+        item.quantity += delta;
+
+        if (item.quantity <= 0) {
+            cart = cart.filter(i => i.id !== id);
+        } else if (item.quantity > item.stock) {
+            item.quantity = item.stock;
+            alert('Không đủ hàng trong kho!');
+        }
+
+        renderCart();
+    }
+
+    function removeFromCart(id) {
+        cart = cart.filter(i => i.id !== id);
+        renderCart();
+    }
+
+    function clearCart() {
+        cart = [];
+        renderCart();
+    }
+
+    function renderCart() {
+        const container = document.getElementById('cartItems');
+        const cartCount = document.getElementById('cartCount');
+        const mobileCartBadge = document.getElementById('mobileCartBadge');
+        const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+        cartCount.textContent = totalItems;
+        mobileCartBadge.textContent = totalItems;
+
+        if (cart.length === 0) {
+            container.innerHTML = `<div class="text-center text-muted py-4">
+                <i class="bi bi-cart-x" style="font-size: 2.5rem;"></i>
+                <p class="mt-2 mb-0">Chưa có sản phẩm</p>
+            </div>`;
+            document.getElementById('cartTotal').textContent = '0đ';
+            return;
+        }
+
+        let html = '';
+        let total = 0;
+
+        cart.forEach(item => {
+            const subtotal = item.price * item.quantity;
+            total += subtotal;
+
+            html += `
+            <div class="cart-item">
+                <div style="flex: 1; min-width: 0;">
+                    <div class="fw-semibold text-truncate">${item.name}</div>
+                    <div class="text-muted small">${item.price.toLocaleString()}đ × ${item.quantity}</div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <div class="qty-control">
+                        <button onclick="updateQuantity(${item.id}, -1)">−</button>
+                        <span>${item.quantity}</span>
+                        <button onclick="updateQuantity(${item.id}, 1)">+</button>
+                    </div>
+                    <button class="btn btn-sm btn-outline-danger" onclick="removeFromCart(${item.id})">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        });
+
+        container.innerHTML = html;
+        document.getElementById('cartTotal').textContent = total.toLocaleString() + 'đ';
+    }
+
+    function toggleMobileCart() {
+        document.getElementById('cartPanel').classList.toggle('show');
+    }
+
+    function checkout() {
+        if (cart.length === 0) {
+            alert('Giỏ hàng trống!');
+            return;
+        }
+
+        const data = {
+            customer_id: document.getElementById('customerId').value || null,
+            payment_method: 'cash',
+            items: cart.map(item => ({
+                product_id: item.id,
+                quantity: item.quantity
+            }))
+        };
+
+        fetch('{{ url_for("sales.create_order") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+            .then(res => res.json())
+            .then(result => {
+                if (result.success) {
+                    // Show invoice modal
+                    showInvoiceModal(result);
+                    clearCart();
+
+                    // Close mobile cart if open
+                    document.getElementById('cartPanel').classList.remove('show');
+                } else {
+                    alert('Lỗi: ' + result.message);
+                }
+            })
+            .catch(err => alert('Lỗi kết nối!'));
+    }
+
+    function showInvoiceModal(result) {
+        const preview = document.getElementById('invoicePreview');
+        const printBtn = document.getElementById('printInvoiceBtn');
+
+        // Set print URL
+        printBtn.href = `/sales/orders/${result.order_id}/print`;
+
+        // Create invoice preview
+        preview.innerHTML = `
+            <div class="text-center border-bottom pb-2 mb-2">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" style="max-width: 80px;" class="mb-1"><br>
+                <small class="text-muted">KOI MART</small>
+            </div>
+            
+            <div class="text-center mb-2">
+                <strong>HÓA ĐƠN BÁN HÀNG</strong><br>
+                <small>Số: <strong>${result.order_code}</strong></small><br>
+                <small>${new Date().toLocaleString('vi-VN')}</small>
+            </div>
+            
+            <div class="border-top border-bottom py-2 mb-2" style="font-size: 11px;">
+                ${result.items ? result.items.map(item => `
+                    <div class="d-flex justify-content-between">
+                        <span>${item.name} x ${item.quantity}</span>
+                        <span>${item.subtotal.toLocaleString()}đ</span>
+                    </div>
+                `).join('') : ''}
+            </div>
+            
+            <div class="d-flex justify-content-between fw-bold">
+                <span>TỔNG CỘNG:</span>
+                <span class="text-success">${result.total.toLocaleString()}đ</span>
+            </div>
+            
+            <div class="text-center mt-3 pt-2 border-top">
+                <small class="text-muted"><em>Cảm ơn quý khách!</em></small>
+            </div>
+        `;
+
+        invoiceModal.show();
+    }
+
+    function newOrder() {
+        invoiceModal.hide();
+        location.reload();
+    }
+
+    // Search functionality
+    document.getElementById('searchProduct').addEventListener('input', function (e) {
+        const query = e.target.value.toLowerCase();
+        document.querySelectorAll('.product-item').forEach(item => {
+            const name = item.querySelector('.name').textContent.toLowerCase();
+            const barcode = item.dataset.barcode?.toLowerCase() || '';
+            item.style.display = (name.includes(query) || barcode.includes(query)) ? 'block' : 'none';
+        });
+    });
+
+    // Close cart on overlay click (mobile)
+    document.addEventListener('click', function (e) {
+        const cartPanel = document.getElementById('cartPanel');
+        const mobileCartBtn = document.getElementById('mobileCartBtn');
+
+        if (window.innerWidth <= 991 &&
+            cartPanel.classList.contains('show') &&
+            !cartPanel.contains(e.target) &&
+            e.target !== mobileCartBtn &&
+            !mobileCartBtn.contains(e.target)) {
+            cartPanel.classList.remove('show');
+        }
+    });
+
+    // Barcode Scanner
+    let html5QrCode = null;
+    let barcodeScannerModal = null;
+
+    function openBarcodeScanner() {
+        barcodeScannerModal = new bootstrap.Modal(document.getElementById('barcodeScannerModal'));
+        barcodeScannerModal.show();
+
+        // Reset status
+        document.getElementById('scanner-status').classList.remove('d-none');
+        document.getElementById('scanner-result').classList.add('d-none');
+
+        // Start scanner after modal is shown
+        document.getElementById('barcodeScannerModal').addEventListener('shown.bs.modal', startBarcodeScanner, { once: true });
+    }
+
+    function startBarcodeScanner() {
+        html5QrCode = new Html5Qrcode("barcode-reader");
+
+        const config = {
+            fps: 10,
+            qrbox: { width: 250, height: 150 },
+            aspectRatio: 1.5,
+            formatsToSupport: [
+                Html5QrcodeSupportedFormats.EAN_13,
+                Html5QrcodeSupportedFormats.EAN_8,
+                Html5QrcodeSupportedFormats.UPC_A,
+                Html5QrcodeSupportedFormats.UPC_E,
+                Html5QrcodeSupportedFormats.CODE_39,
+                Html5QrcodeSupportedFormats.CODE_128,
+                Html5QrcodeSupportedFormats.QR_CODE
+            ]
+        };
+
+        html5QrCode.start(
+            { facingMode: "environment" }, // Use back camera
+            config,
+            onScanSuccess,
+            onScanFailure
+        ).then(() => {
+            document.getElementById('scanner-status').innerHTML = `
+                <i class="bi bi-camera-video-fill text-success" style="font-size: 1.5rem;"></i>
+                <p class="text-muted mb-0 mt-2">Đưa mã vạch vào khung hình...</p>
+            `;
+        }).catch((err) => {
+            document.getElementById('scanner-status').innerHTML = `
+                <i class="bi bi-exclamation-triangle text-warning" style="font-size: 1.5rem;"></i>
+                <p class="text-danger mb-0 mt-2">Không thể truy cập camera: ${err}</p>
+            `;
+            console.error("Camera error: ", err);
+        });
+    }
+
+    function onScanSuccess(decodedText, decodedResult) {
+        // Play beep sound
+        const beep = new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...');
+        try { beep.play(); } catch (e) { }
+
+        // Show result
+        document.getElementById('scanned-code').textContent = 'Mã: ' + decodedText;
+        document.getElementById('scanner-result').classList.remove('d-none');
+
+        // Search for product with this barcode
+        const productItem = document.querySelector(`.product-item[data-barcode="${decodedText}"]`);
+
+        if (productItem) {
+            // Stop scanner
+            stopBarcodeScanner();
+            barcodeScannerModal.hide();
+
+            // Click the product to add to cart
+            productItem.click();
+
+            // Visual feedback
+            productItem.style.animation = 'pulse 0.5s';
+            setTimeout(() => productItem.style.animation = '', 500);
+        } else {
+            // Product not found
+            document.getElementById('scanner-result').className = 'alert alert-warning mt-3';
+            document.getElementById('scanned-code').textContent = 'Không tìm thấy sản phẩm với mã: ' + decodedText;
+
+            // Continue scanning after 2 seconds
+            setTimeout(() => {
+                document.getElementById('scanner-result').classList.add('d-none');
+                document.getElementById('scanner-result').className = 'alert alert-success d-none mt-3';
+            }, 2000);
+        }
+    }
+
+    function onScanFailure(error) {
+        // Ignore scan failures (normal when no barcode in view)
+    }
+
+    function stopBarcodeScanner() {
+        if (html5QrCode) {
+            html5QrCode.stop().then(() => {
+                html5QrCode.clear();
+                html5QrCode = null;
+            }).catch(err => console.error("Error stopping scanner:", err));
+        }
+    }
+
+    // Stop scanner when modal is closed
+    document.getElementById('barcodeScannerModal').addEventListener('hidden.bs.modal', stopBarcodeScanner);
+</script>
+{% endblock %}
+{% endblock %}

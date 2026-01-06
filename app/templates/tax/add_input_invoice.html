@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}Thêm hoá đơn đầu vào - KOI MART{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h4 class="mb-0">Thêm hoá đơn đầu vào</h4>
+    <a href="{{ url_for('tax.input_invoices') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Quay lại
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST" class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Số hoá đơn <span class="text-danger">*</span></label>
+                <input type="text" name="invoice_number" class="form-control" required placeholder="VD: 0000123">
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Ngày hoá đơn <span class="text-danger">*</span></label>
+                <input type="date" name="invoice_date" class="form-control" required>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Tên nhà cung cấp <span class="text-danger">*</span></label>
+                <input type="text" name="supplier_name" class="form-control" required placeholder="VD: Công ty ABC">
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Mã số thuế NCC <span class="text-danger">*</span></label>
+                <input type="text" name="supplier_tax_code" class="form-control" required placeholder="VD: 0123456789">
+            </div>
+
+            <div class="col-md-12">
+                <label class="form-label">Địa chỉ nhà cung cấp</label>
+                <input type="text" name="supplier_address" class="form-control" placeholder="Địa chỉ đầy đủ">
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Tổng tiền chưa thuế <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <input type="number" name="subtotal" class="form-control" required min="0" id="subtotal">
+                    <span class="input-group-text">đ</span>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Thuế suất GTGT</label>
+                <select name="vat_rate" class="form-select" id="vatRate">
+                    <option value="0.10">10%</option>
+                    <option value="0.08">8%</option>
+                    <option value="0.05">5%</option>
+                    <option value="0">0%</option>
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Tiền thuế GTGT</label>
+                <div class="input-group">
+                    <input type="number" name="vat_amount" class="form-control" id="vatAmount" readonly>
+                    <span class="input-group-text">đ</span>
+                </div>
+            </div>
+
+            <div class="col-md-12">
+                <label class="form-label">Nội dung / Ghi chú</label>
+                <textarea name="note" class="form-control" rows="2" placeholder="Mô tả hàng hoá, dịch vụ..."></textarea>
+            </div>
+
+            <div class="col-12">
+                <hr>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-lg me-1"></i>Lưu hoá đơn
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    function calculateVAT() {
+        const subtotal = parseFloat(document.getElementById('subtotal').value) || 0;
+        const vatRate = parseFloat(document.getElementById('vatRate').value) || 0;
+        const vatAmount = subtotal * vatRate;
+        document.getElementById('vatAmount').value = Math.round(vatAmount);
+    }
+
+    document.getElementById('subtotal').addEventListener('input', calculateVAT);
+    document.getElementById('vatRate').addEventListener('change', calculateVAT);
+</script>
+{% endblock %}
+{% endblock %}

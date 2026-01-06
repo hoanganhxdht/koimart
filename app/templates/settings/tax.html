@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}Cài đặt thuế - KOI MART{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h4 class="mb-0">Cài đặt thuế suất</h4>
+    <a href="{{ url_for('settings.index') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Quay lại
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST">
+                    <p class="text-muted mb-4">Chọn thuế suất GTGT áp dụng cho các đơn hàng:</p>
+
+                    <div class="mb-4">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="vat_rate" id="vat0" value="0" {% if
+                                settings.get('vat_rate', '10' )=='0' %}checked{% endif %}>
+                            <label class="form-check-label" for="vat0">
+                                <span class="badge bg-secondary fs-6">0%</span>
+                            </label>
+                        </div>
+
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="vat_rate" id="vat8" value="8" {% if
+                                settings.get('vat_rate', '10' )=='8' %}checked{% endif %}>
+                            <label class="form-check-label" for="vat8">
+                                <span class="badge bg-warning text-dark fs-6">8%</span>
+                            </label>
+                        </div>
+
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="vat_rate" id="vat10" value="10" {% if
+                                settings.get('vat_rate', '10' )=='10' %}checked{% endif %}>
+                            <label class="form-check-label" for="vat10">
+                                <span class="badge bg-primary fs-6">10%</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Lưu ý:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li><strong>0%</strong>: Áp dụng cho hàng hoá không chịu thuế</li>
+                            <li><strong>8%</strong>: Thuế suất giảm (theo chính sách hỗ trợ)</li>
+                            <li><strong>10%</strong>: Thuế suất thông thường</li>
+                        </ul>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg me-1"></i>Lưu thay đổi
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h6 class="fw-bold mb-3"><i class="bi bi-calculator me-2"></i>Ví dụ tính thuế</h6>
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Giá bán</th>
+                            <th>Thuế 0%</th>
+                            <th>Thuế 8%</th>
+                            <th>Thuế 10%</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>100,000đ</td>
+                            <td>0đ</td>
+                            <td>8,000đ</td>
+                            <td>10,000đ</td>
+                        </tr>
+                        <tr>
+                            <td>500,000đ</td>
+                            <td>0đ</td>
+                            <td>40,000đ</td>
+                            <td>50,000đ</td>
+                        </tr>
+                        <tr>
+                            <td>1,000,000đ</td>
+                            <td>0đ</td>
+                            <td>80,000đ</td>
+                            <td>100,000đ</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Báo cáo - MiniMart{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h4 class="mb-0">Báo cáo & Thống kê</h4>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center py-5">
+                <div class="mb-3">
+                    <i class="bi bi-graph-up-arrow" style="font-size: 3rem; color: #10b981;"></i>
+                </div>
+                <h5>Báo cáo Doanh thu</h5>
+                <p class="text-muted">Xem doanh thu theo ngày, tháng</p>
+                <a href="{{ url_for('reports.revenue') }}" class="btn btn-outline-success">Xem báo cáo</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center py-5">
+                <div class="mb-3">
+                    <i class="bi bi-box-seam" style="font-size: 3rem; color: #4361ee;"></i>
+                </div>
+                <h5>Sản phẩm bán chạy</h5>
+                <p class="text-muted">Top sản phẩm được mua nhiều nhất</p>
+                <a href="{{ url_for('reports.products_report') }}" class="btn btn-outline-primary">Xem báo cáo</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center py-5">
+                <div class="mb-3">
+                    <i class="bi bi-cash-stack" style="font-size: 3rem; color: #f59e0b;"></i>
+                </div>
+                <h5>Báo cáo Lợi nhuận</h5>
+                <p class="text-muted">Phân tích lợi nhuận theo thời gian</p>
+                <a href="{{ url_for('reports.profit') }}" class="btn btn-outline-warning">Xem báo cáo</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

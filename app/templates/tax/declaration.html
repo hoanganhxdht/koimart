@@ -1,0 +1,388 @@
+{% extends 'base.html' %}
+
+{% block title %}Lập tờ khai thuế - KOI MART{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h4 class="mb-0">Lập tờ khai thuế Hộ kinh doanh</h4>
+    <div>
+        <button class="btn btn-outline-primary me-2" onclick="window.print()">
+            <i class="bi bi-printer me-1"></i>In tờ khai
+        </button>
+        <button class="btn btn-success" id="btnExportXML">
+            <i class="bi bi-download me-1"></i>Xuất XML
+        </button>
+    </div>
+</div>
+
+<!-- Chọn kỳ kê khai -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form class="row g-3 align-items-end" method="GET">
+            <div class="col-md-2">
+                <label class="form-label">Phương pháp kê khai</label>
+                <select name="method" class="form-select" id="taxMethod">
+                    <option value="khoan" {% if method=='khoan' %}selected{% endif %}>Phương pháp khoán</option>
+                    <option value="kekhai" {% if method=='kekhai' %}selected{% endif %}>Kê khai định kỳ</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Kỳ tính thuế</label>
+                <select name="period" class="form-select">
+                    <option value="year" {% if period=='year' %}selected{% endif %}>Năm</option>
+                    <option value="quarter" {% if period=='quarter' %}selected{% endif %}>Quý</option>
+                    <option value="month" {% if period=='month' %}selected{% endif %}>Tháng</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Tháng/Quý</label>
+                <select name="month" class="form-select">
+                    {% for m in range(1, 13) %}
+                    <option value="{{ m }}" {% if m==month %}selected{% endif %}>
+                        {% if period == 'quarter' %}Quý {{ ((m-1)//3)+1 }}{% else %}Tháng {{ m }}{% endif %}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Năm</label>
+                <select name="year" class="form-select">
+                    {% for y in range(2024, 2028) %}
+                    <option value="{{ y }}" {% if y==year %}selected{% endif %}>{{ y }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-calculator me-1"></i>Tính toán
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Tờ khai thuế mẫu 01/CNKD -->
+<div class="card" id="taxDeclarationForm">
+    <div class="card-header bg-light">
+        <div class="text-center">
+            <strong>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</strong><br>
+            <span>Độc lập - Tự do - Hạnh phúc</span>
+            <hr class="my-2" style="width: 150px; margin: auto;">
+        </div>
+    </div>
+    <div class="card-body">
+        <!-- Tiêu đề tờ khai -->
+        <div class="text-center mb-4">
+            <h5 class="fw-bold">TỜ KHAI THUẾ</h5>
+            <h6>ĐỐI VỚI HỘ KINH DOANH, CÁ NHÂN KINH DOANH</h6>
+            <p class="text-muted mb-0">(Theo Mẫu số 01/CNKD ban hành kèm theo Thông tư số 40/2021/TT-BTC)</p>
+        </div>
+
+        <!-- Thông tin kỳ kê khai -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="border p-3 rounded">
+                    <h6 class="fw-bold mb-3"><i class="bi bi-calendar me-2"></i>I. Kỳ tính thuế</h6>
+                    <div class="mb-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="taxPeriodType" id="periodYear" checked>
+                            <label class="form-check-label" for="periodYear">
+                                [01a] Năm <strong>{{ year }}</strong> (đối với hộ khoán)
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="taxPeriodType" id="periodMonth">
+                            <label class="form-check-label" for="periodMonth">
+                                [01b] Tháng <strong>{{ month }}/{{ year }}</strong> (kê khai theo tháng)
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="taxPeriodType" id="periodQuarter">
+                            <label class="form-check-label" for="periodQuarter">
+                                [01c] Quý <strong>{{ ((month-1)//3)+1 }}/{{ year }}</strong> (kê khai theo quý)
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="border p-3 rounded h-100">
+                    <h6 class="fw-bold mb-3"><i class="bi bi-info-circle me-2"></i>Lưu ý</h6>
+                    <ul class="small text-muted mb-0">
+                        <li><strong>Hộ khoán:</strong> Khai thuế 1 lần/năm (mẫu 01a)</li>
+                        <li><strong>Kê khai tháng:</strong> Doanh thu năm trước &gt; 50 tỷ đồng</li>
+                        <li><strong>Kê khai quý:</strong> Doanh thu ≤ 50 tỷ đồng</li>
+                        <li>Hộ có doanh thu ≤ 100 triệu/năm không phải nộp thuế</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Phần A: Thông tin người nộp thuế -->
+        <div class="mb-4">
+            <h6 class="fw-bold bg-light p-2 rounded"><i class="bi bi-person me-2"></i>A. THÔNG TIN NGƯỜI NỘP THUẾ</h6>
+            <table class="table table-bordered">
+                <tbody>
+                    <tr>
+                        <td style="width: 30%" class="bg-light">[02] Tên người nộp thuế:</td>
+                        <td><input type="text" class="form-control form-control-sm"
+                                value="{{ settings.get('store_name', 'KOI MART') }}"></td>
+                    </tr>
+                    <tr>
+                        <td class="bg-light">[03] Mã số thuế:</td>
+                        <td><input type="text" class="form-control form-control-sm"
+                                value="{{ settings.get('tax_code', '') }}" placeholder="Nhập MST"></td>
+                    </tr>
+                    <tr>
+                        <td class="bg-light">[04] Số CMND/CCCD:</td>
+                        <td><input type="text" class="form-control form-control-sm" placeholder="Số CMND/CCCD chủ hộ">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="bg-light">[05] Địa chỉ cư trú:</td>
+                        <td><input type="text" class="form-control form-control-sm"
+                                value="{{ settings.get('store_address', '') }}"></td>
+                    </tr>
+                    <tr>
+                        <td class="bg-light">[06] Điện thoại:</td>
+                        <td><input type="text" class="form-control form-control-sm"
+                                value="{{ settings.get('store_phone', '') }}"></td>
+                    </tr>
+                    <tr>
+                        <td class="bg-light">[07] Email:</td>
+                        <td><input type="text" class="form-control form-control-sm"
+                                value="{{ settings.get('store_email', '') }}"></td>
+                    </tr>
+                    <tr>
+                        <td class="bg-light">[08] Ngành nghề kinh doanh:</td>
+                        <td>
+                            <select class="form-select form-select-sm">
+                                <option value="5211">5211 - Bán lẻ lương thực, thực phẩm, đồ uống, thuốc lá</option>
+                                <option value="5219">5219 - Bán lẻ tổng hợp khác</option>
+                                <option value="5610">5610 - Nhà hàng và dịch vụ ăn uống</option>
+                                <option value="4711" selected>4711 - Bán lẻ trong siêu thị, cửa hàng tiện ích</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="bg-light">[12] Địa điểm kinh doanh:</td>
+                        <td><input type="text" class="form-control form-control-sm"
+                                value="{{ settings.get('store_address', '') }}"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Phần B: Doanh thu và thuế -->
+        <div class="mb-4">
+            <h6 class="fw-bold bg-light p-2 rounded"><i class="bi bi-cash-stack me-2"></i>B. DOANH THU VÀ THUẾ PHẢI NỘP
+            </h6>
+            <table class="table table-bordered">
+                <thead class="table-secondary">
+                    <tr>
+                        <th style="width: 5%">STT</th>
+                        <th style="width: 35%">Chỉ tiêu</th>
+                        <th style="width: 20%">Mã chỉ tiêu</th>
+                        <th style="width: 20%">Số tiền (VNĐ)</th>
+                        <th style="width: 20%">Ghi chú</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="text-center">1</td>
+                        <td>Doanh thu bán hàng hóa, dịch vụ</td>
+                        <td class="text-center fw-bold">[21]</td>
+                        <td class="text-end">
+                            <input type="text" class="form-control form-control-sm text-end fw-bold"
+                                value="{{ '{:,.0f}'.format(total_revenue) }}" readonly>
+                        </td>
+                        <td class="small text-muted">Từ dữ liệu POS</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">2</td>
+                        <td>Doanh thu chịu thuế GTGT</td>
+                        <td class="text-center fw-bold">[22]</td>
+                        <td class="text-end">
+                            <input type="text" class="form-control form-control-sm text-end"
+                                value="{{ '{:,.0f}'.format(total_revenue) }}" readonly>
+                        </td>
+                        <td class="small text-muted">==[21]</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">3</td>
+                        <td>Tỷ lệ thuế GTGT (%)</td>
+                        <td class="text-center fw-bold">[23]</td>
+                        <td class="text-end">
+                            <select class="form-select form-select-sm" id="vatRateSelect">
+                                <option value="1" {% if vat_gtgt==1 %}selected{% endif %}>1%</option>
+                                <option value="2">2%</option>
+                                <option value="3">3%</option>
+                                <option value="5">5%</option>
+                            </select>
+                        </td>
+                        <td class="small text-muted">Theo ngành nghề</td>
+                    </tr>
+                    <tr class="table-warning">
+                        <td class="text-center">4</td>
+                        <td><strong>Thuế GTGT phải nộp</strong></td>
+                        <td class="text-center fw-bold">[24]</td>
+                        <td class="text-end">
+                            <input type="text" class="form-control form-control-sm text-end fw-bold text-danger"
+                                value="{{ '{:,.0f}'.format(vat_gtgt_amount) }}" readonly id="vatAmount">
+                        </td>
+                        <td class="small text-muted">[22] x [23]</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">5</td>
+                        <td>Doanh thu chịu thuế TNCN</td>
+                        <td class="text-center fw-bold">[25]</td>
+                        <td class="text-end">
+                            <input type="text" class="form-control form-control-sm text-end"
+                                value="{{ '{:,.0f}'.format(total_revenue) }}" readonly>
+                        </td>
+                        <td class="small text-muted">==[21]</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">6</td>
+                        <td>Tỷ lệ thuế TNCN (%)</td>
+                        <td class="text-center fw-bold">[26]</td>
+                        <td class="text-end">
+                            <select class="form-select form-select-sm" id="pitRateSelect">
+                                <option value="0.5" {% if pit_rate==0.5 %}selected{% endif %}>0.5%</option>
+                                <option value="1">1%</option>
+                                <option value="1.5">1.5%</option>
+                                <option value="2">2%</option>
+                            </select>
+                        </td>
+                        <td class="small text-muted">Theo ngành nghề</td>
+                    </tr>
+                    <tr class="table-warning">
+                        <td class="text-center">7</td>
+                        <td><strong>Thuế TNCN phải nộp</strong></td>
+                        <td class="text-center fw-bold">[27]</td>
+                        <td class="text-end">
+                            <input type="text" class="form-control form-control-sm text-end fw-bold text-danger"
+                                value="{{ '{:,.0f}'.format(pit_amount) }}" readonly id="pitAmount">
+                        </td>
+                        <td class="small text-muted">[25] x [26]</td>
+                    </tr>
+                    <tr class="table-success">
+                        <td class="text-center fw-bold">8</td>
+                        <td><strong>TỔNG CỘNG THUẾ PHẢI NỘP</strong></td>
+                        <td class="text-center fw-bold">[28]</td>
+                        <td class="text-end">
+                            <input type="text" class="form-control form-control-sm text-end fw-bold text-success fs-5"
+                                value="{{ '{:,.0f}'.format(total_tax) }}" readonly id="totalTax">
+                        </td>
+                        <td class="small text-muted">[24] + [27]</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Cam kết -->
+        <div class="mb-4">
+            <div class="alert alert-secondary">
+                <p class="mb-2">Tôi cam đoan số liệu khai trên là đúng sự thật và chịu trách nhiệm trước pháp luật về
+                    những số liệu đã khai.</p>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="mb-1 small">Ngày lập: <strong>{{ now.strftime('%d/%m/%Y') if now else '06/01/2026'
+                                }}</strong></p>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <p class="mb-1"><strong>NGƯỜI NỘP THUẾ</strong></p>
+                        <p class="small text-muted">(Ký, ghi rõ họ tên)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Thống kê nhanh -->
+        <div class="row g-3">
+            <div class="col-md-3">
+                <div class="stat-card text-center">
+                    <div class="text-muted small">Tổng đơn hàng</div>
+                    <div class="value">{{ total_orders }}</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card text-center">
+                    <div class="text-muted small">Doanh thu</div>
+                    <div class="value text-primary">{{ '{:,.0f}'.format(total_revenue) }}đ</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card text-center">
+                    <div class="text-muted small">Thuế GTGT (1%)</div>
+                    <div class="value text-warning">{{ '{:,.0f}'.format(vat_gtgt_amount) }}đ</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card text-center">
+                    <div class="text-muted small">Thuế TNCN (0.5%)</div>
+                    <div class="value text-info">{{ '{:,.0f}'.format(pit_amount) }}đ</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hướng dẫn nộp thuế -->
+<div class="card mt-4">
+    <div class="card-header">
+        <i class="bi bi-question-circle me-2"></i>Hướng dẫn nộp tờ khai
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h6 class="fw-bold"><i class="bi bi-1-circle me-2"></i>Nộp trực tuyến</h6>
+                <ul class="small">
+                    <li>Truy cập <a href="https://thuedientu.gdt.gov.vn" target="_blank">thuedientu.gdt.gov.vn</a></li>
+                    <li>Đăng nhập bằng tài khoản thuế điện tử</li>
+                    <li>Chọn "Khai thuế" → "Hộ kinh doanh, cá nhân kinh doanh"</li>
+                    <li>Điền thông tin và nộp</li>
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <h6 class="fw-bold"><i class="bi bi-2-circle me-2"></i>Thời hạn nộp</h6>
+                <ul class="small">
+                    <li><strong>Hộ khoán:</strong> Trước 15/12 hàng năm</li>
+                    <li><strong>Kê khai tháng:</strong> Ngày 20 tháng sau</li>
+                    <li><strong>Kê khai quý:</strong> Ngày cuối tháng đầu quý sau</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Lấy doanh thu từ data attribute
+    var revenueElement = document.getElementById('vatAmount');
+    var totalRevenue = parseFloat(revenueElement.value.replace(/,/g, '')) / 0.01 || 0;
+
+    document.getElementById('vatRateSelect').addEventListener('change', function () {
+        var vatRate = parseFloat(this.value) / 100;
+        var vatAmount = totalRevenue * vatRate;
+        document.getElementById('vatAmount').value = vatAmount.toLocaleString('vi-VN');
+        updateTotal();
+    });
+
+    document.getElementById('pitRateSelect').addEventListener('change', function () {
+        var pitRate = parseFloat(this.value) / 100;
+        var pitAmount = totalRevenue * pitRate;
+        document.getElementById('pitAmount').value = pitAmount.toLocaleString('vi-VN');
+        updateTotal();
+    });
+
+    function updateTotal() {
+        var vatAmount = parseFloat(document.getElementById('vatAmount').value.replace(/,/g, '')) || 0;
+        var pitAmount = parseFloat(document.getElementById('pitAmount').value.replace(/,/g, '')) || 0;
+        document.getElementById('totalTax').value = (vatAmount + pitAmount).toLocaleString('vi-VN');
+    }
+</script>
+{% endblock %}

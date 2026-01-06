@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Hoá đơn điện tử - KOI MART{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h4 class="mb-0">Hoá đơn điện tử</h4>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Mã HĐ</th>
+                        <th>Ngày tạo</th>
+                        <th>Khách hàng</th>
+                        <th>Tổng tiền</th>
+                        <th>Trạng thái HĐĐT</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders.items %}
+                    <tr>
+                        <td><strong>{{ order.order_code }}</strong></td>
+                        <td>{{ order.created_at.strftime('%H:%M %d/%m/%Y') }}</td>
+                        <td>{{ order.customer.name if order.customer else 'Khách lẻ' }}</td>
+                        <td class="fw-semibold text-success">{{ "{:,.0f}".format(order.total_amount) }}đ</td>
+                        <td>
+                            <span class="badge bg-secondary">Chưa phát hành</span>
+                        </td>
+                        <td>
+                            <form action="{{ url_for('sales.issue_einvoice', id=order.id) }}" method="POST"
+                                style="display: inline;">
+                                <button type="submit" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-file-earmark-plus"></i> Phát hành
+                                </button>
+                            </form>
+                            <a href="{{ url_for('sales.order_detail', id=order.id) }}"
+                                class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">Chưa có hoá đơn nào</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if orders.pages > 1 %}
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% for page in orders.iter_pages() %}
+                {% if page %}
+                <li class="page-item {% if page == orders.page %}active{% endif %}">
+                    <a class="page-link" href="?page={{ page }}">{{ page }}</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+                {% endif %}
+                {% endfor %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

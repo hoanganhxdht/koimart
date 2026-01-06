@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ 'Sửa' if product else 'Thêm' }} sản phẩm - MiniMart{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h4 class="mb-0">{{ 'Sửa' if product else 'Thêm' }} sản phẩm</h4>
+    <a href="{{ url_for('products.index') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Quay lại
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST" class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Mã vạch <small class="text-muted">(tùy chọn)</small></label>
+                <input type="text" name="barcode" class="form-control" value="{{ product.barcode if product else '' }}">
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Tên sản phẩm <span class="text-danger">*</span></label>
+                <input type="text" name="name" class="form-control" value="{{ product.name if product else '' }}"
+                    required>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Giá bán <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <input type="number" name="price" class="form-control" value="{{ product.price if product else 0 }}"
+                        required min="0">
+                    <span class="input-group-text">đ</span>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Giá vốn</label>
+                <div class="input-group">
+                    <input type="number" name="cost" class="form-control" value="{{ product.cost if product else 0 }}"
+                        min="0">
+                    <span class="input-group-text">đ</span>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Danh mục</label>
+                <select name="category_id" class="form-select">
+                    <option value="">-- Chọn danh mục --</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.id }}" {% if product and product.category_id==cat.id %}selected{% endif %}>{{
+                        cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            {% if not product %}
+            <div class="col-md-4">
+                <label class="form-label">Số lượng tồn kho ban đầu</label>
+                <input type="number" name="stock" class="form-control" value="0" min="0">
+            </div>
+            {% endif %}
+
+            <div class="col-md-4">
+                <label class="form-label">Đơn vị tính</label>
+                <input type="text" name="unit" class="form-control" value="{{ product.unit if product else 'cái' }}">
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Tồn kho tối thiểu (cảnh báo)</label>
+                <input type="number" name="min_stock" class="form-control"
+                    value="{{ product.min_stock if product else 5 }}" min="0">
+            </div>
+
+            {% if product %}
+            <div class="col-md-12">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="is_active" id="isActive" {% if
+                        product.is_active %}checked{% endif %}>
+                    <label class="form-check-label" for="isActive">Đang kinh doanh</label>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="col-12">
+                <hr>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-lg me-1"></i>{{ 'Cập nhật' if product else 'Thêm mới' }}
+                </button>
+
+                {% if product %}
+                <button type="button" class="btn btn-outline-danger float-end" data-bs-toggle="modal"
+                    data-bs-target="#deleteModal">
+                    <i class="bi bi-trash me-1"></i>Xóa sản phẩm
+                </button>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if product %}
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Xác nhận xóa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Bạn có chắc muốn xóa sản phẩm <strong>{{ product.name }}</strong>?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <form action="{{ url_for('products.delete', id=product.id) }}" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">Xóa</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

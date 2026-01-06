@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}Danh sách hóa đơn - MiniMart{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h4 class="mb-0">Danh sách hóa đơn</h4>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Mã HĐ</th>
+                        <th>Thời gian</th>
+                        <th>Nhân viên</th>
+                        <th>Khách hàng</th>
+                        <th>Tổng tiền</th>
+                        <th>Thanh toán</th>
+                        <th>Trạng thái</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders.items %}
+                    <tr>
+                        <td><a href="{{ url_for('sales.order_detail', id=order.id) }}" class="fw-semibold">{{
+                                order.order_code }}</a></td>
+                        <td>{{ order.created_at.strftime('%H:%M %d/%m/%Y') }}</td>
+                        <td>{{ order.user.fullname or order.user.username }}</td>
+                        <td>{{ order.customer.name if order.customer else 'Khách lẻ' }}</td>
+                        <td class="fw-semibold">{{ "{:,.0f}".format(order.total_amount) }}đ</td>
+                        <td>
+                            {% if order.payment_method == 'cash' %}
+                            <span class="badge bg-success">Tiền mặt</span>
+                            {% elif order.payment_method == 'card' %}
+                            <span class="badge bg-info">Thẻ</span>
+                            {% else %}
+                            <span class="badge bg-primary">Chuyển khoản</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if order.payment_status == 'paid' %}
+                            <span class="badge bg-success">Đã thanh toán</span>
+                            {% elif order.payment_status == 'pending' %}
+                            <span class="badge bg-warning">Chờ xử lý</span>
+                            {% else %}
+                            <span class="badge bg-danger">Đã hủy</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('sales.print_order', id=order.id) }}"
+                                class="btn btn-sm btn-outline-secondary" target="_blank">
+                                <i class="bi bi-printer"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4">Chưa có hóa đơn</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if orders.pages > 1 %}
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% for page in orders.iter_pages() %}
+                {% if page %}
+                <li class="page-item {% if page == orders.page %}active{% endif %}">
+                    <a class="page-link" href="?page={{ page }}">{{ page }}</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+                {% endif %}
+                {% endfor %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

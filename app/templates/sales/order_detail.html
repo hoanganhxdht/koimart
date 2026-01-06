@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}Chi tiết hóa đơn {{ order.order_code }} - MiniMart{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h4 class="mb-0">Hóa đơn {{ order.order_code }}</h4>
+    <div>
+        <a href="{{ url_for('sales.download_pdf', id=order.id) }}" class="btn btn-primary">
+            <i class="bi bi-file-earmark-pdf me-1"></i>Tải PDF
+        </a>
+        <a href="{{ url_for('sales.print_order', id=order.id) }}" class="btn btn-outline-secondary" target="_blank">
+            <i class="bi bi-printer me-1"></i>In hóa đơn
+        </a>
+        <a href="{{ url_for('sales.order_list') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Quay lại
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">Chi tiết sản phẩm</div>
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Sản phẩm</th>
+                            <th>Đơn giá</th>
+                            <th>Số lượng</th>
+                            <th>Thành tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order.items %}
+                        <tr>
+                            <td>{{ item.product.name }}</td>
+                            <td>{{ "{:,.0f}".format(item.price) }}đ</td>
+                            <td>{{ item.quantity }}</td>
+                            <td class="fw-semibold">{{ "{:,.0f}".format(item.subtotal) }}đ</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" class="text-end">Tạm tính:</td>
+                            <td class="fw-semibold">{{ "{:,.0f}".format(order.subtotal) }}đ</td>
+                        </tr>
+                        {% if order.discount > 0 %}
+                        <tr>
+                            <td colspan="3" class="text-end">Giảm giá:</td>
+                            <td class="text-danger">-{{ "{:,.0f}".format(order.discount) }}đ</td>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                            <td colspan="3" class="text-end fs-5">Tổng cộng:</td>
+                            <td class="fw-bold fs-5 text-primary">{{ "{:,.0f}".format(order.total_amount) }}đ</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">Thông tin đơn hàng</div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <td class="text-muted">Mã hóa đơn:</td>
+                        <td class="fw-semibold">{{ order.order_code }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Thời gian:</td>
+                        <td>{{ order.created_at.strftime('%H:%M %d/%m/%Y') }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Nhân viên:</td>
+                        <td>{{ order.user.fullname or order.user.username }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Khách hàng:</td>
+                        <td>{{ order.customer.name if order.customer else 'Khách lẻ' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Thanh toán:</td>
+                        <td>
+                            {% if order.payment_method == 'cash' %}Tiền mặt
+                            {% elif order.payment_method == 'card' %}Thẻ
+                            {% else %}Chuyển khoản{% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Trạng thái:</td>
+                        <td>
+                            {% if order.payment_status == 'paid' %}
+                            <span class="badge bg-success">Đã thanh toán</span>
+                            {% else %}
+                            <span class="badge bg-warning">{{ order.payment_status }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% if order.note %}
+                    <tr>
+                        <td class="text-muted">Ghi chú:</td>
+                        <td>{{ order.note }}</td>
+                    </tr>
+                    {% endif %}
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}Kho hàng - MiniMart{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h4 class="mb-0">Quản lý kho hàng</h4>
+    <div>
+        <a href="{{ url_for('products.inventory_logs') }}" class="btn btn-outline-secondary me-2">
+            <i class="bi bi-clock-history me-1"></i>Lịch sử
+        </a>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#importModal">
+            <i class="bi bi-box-arrow-in-down me-1"></i>Nhập kho
+        </button>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Mã vạch</th>
+                        <th>Tên sản phẩm</th>
+                        <th>Tồn kho</th>
+                        <th>Tối thiểu</th>
+                        <th>Trạng thái</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products.items %}
+                    <tr>
+                        <td><code>{{ product.barcode or '-' }}</code></td>
+                        <td class="fw-semibold">{{ product.name }}</td>
+                        <td>
+                            <span class="{% if product.is_low_stock %}text-danger fw-bold{% endif %}">
+                                {{ product.stock }} {{ product.unit }}
+                            </span>
+                        </td>
+                        <td>{{ product.min_stock }} {{ product.unit }}</td>
+                        <td>
+                            {% if product.stock == 0 %}
+                            <span class="badge bg-danger">Hết hàng</span>
+                            {% elif product.is_low_stock %}
+                            <span class="badge bg-warning">Sắp hết</span>
+                            {% else %}
+                            <span class="badge bg-success">Đủ hàng</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-success"
+                                onclick="openImportModal({{ product.id }}, '{{ product.name }}')">
+                                <i class="bi bi-plus-lg"></i> Nhập
+                            </button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">Không có sản phẩm</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Import Modal -->
+<div class="modal fade" id="importModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nhập kho</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('products.import_stock') }}" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Sản phẩm</label>
+                        <select name="product_id" id="importProductId" class="form-select" required>
+                            <option value="">-- Chọn sản phẩm --</option>
+                            {% for product in products.items %}
+                            <option value="{{ product.id }}">{{ product.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Số lượng nhập</label>
+                        <input type="number" name="quantity" class="form-control" required min="1">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ghi chú</label>
+                        <input type="text" name="note" class="form-control" placeholder="VD: Nhập hàng từ NCC ABC">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Nhập kho</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    function openImportModal(productId, productName) {
+        document.getElementById('importProductId').value = productId;
+        new bootstrap.Modal(document.getElementById('importModal')).show();
+    }
+</script>
+{% endblock %}
+{% endblock %}

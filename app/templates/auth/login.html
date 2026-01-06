@@ -1,0 +1,280 @@
+{% extends 'base.html' %}
+
+{% block title %}Đăng nhập - KOI MART{% endblock %}
+
+{% block extra_css %}
+<style>
+    .login-page {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(-45deg, #22c55e, #16a34a, #0ea5e9, #8b5cf6);
+        background-size: 400% 400%;
+        animation: gradientAnimation 15s ease infinite;
+        position: relative;
+        overflow: hidden;
+    }
+
+    @keyframes gradientAnimation {
+        0% {
+            background-position: 0% 50%;
+        }
+
+        50% {
+            background-position: 100% 50%;
+        }
+
+        100% {
+            background-position: 0% 50%;
+        }
+    }
+
+    /* Floating particles */
+    .login-page::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='1' fill='rgba(255,255,255,0.1)'/%3E%3C/svg%3E");
+        background-size: 50px 50px;
+        animation: floatParticles 20s linear infinite;
+        pointer-events: none;
+    }
+
+    @keyframes floatParticles {
+        0% {
+            transform: translate(0, 0) rotate(0deg);
+        }
+
+        100% {
+            transform: translate(-50px, -50px) rotate(360deg);
+        }
+    }
+
+    /* Glassmorphism card */
+    .login-card {
+        width: 100%;
+        max-width: 420px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 24px;
+        box-shadow:
+            0 25px 50px -12px rgba(0, 0, 0, 0.25),
+            0 0 0 1px rgba(255, 255, 255, 0.1);
+        padding: 48px 40px;
+        position: relative;
+        z-index: 1;
+        animation: cardFloat 0.6s ease-out;
+    }
+
+    @keyframes cardFloat {
+        0% {
+            opacity: 0;
+            transform: translateY(30px) scale(0.95);
+        }
+
+        100% {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    .login-logo {
+        text-align: center;
+        margin-bottom: 32px;
+    }
+
+    .login-logo img {
+        max-width: 160px;
+        filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+        animation: logoFloat 3s ease-in-out infinite;
+    }
+
+    @keyframes logoFloat {
+
+        0%,
+        100% {
+            transform: translateY(0);
+        }
+
+        50% {
+            transform: translateY(-8px);
+        }
+    }
+
+    .login-title {
+        text-align: center;
+        margin-bottom: 8px;
+        font-family: 'Outfit', sans-serif;
+        font-weight: 700;
+        font-size: 1.5rem;
+        color: #1e293b;
+    }
+
+    .login-subtitle {
+        text-align: center;
+        color: #64748b;
+        margin-bottom: 32px;
+        font-size: 0.95rem;
+    }
+
+    /* Form Group */
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #334155;
+        font-size: 0.9rem;
+    }
+
+    .input-wrapper {
+        position: relative;
+    }
+
+    .input-wrapper .input-icon {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        font-size: 1.1rem;
+        z-index: 2;
+        transition: color 0.3s ease;
+    }
+
+    .input-wrapper .form-control {
+        height: 52px;
+        padding: 12px 16px 12px 48px;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: #f8fafc;
+        width: 100%;
+    }
+
+    .input-wrapper .form-control:focus {
+        border-color: #22c55e;
+        box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.15);
+        background: white;
+        outline: none;
+    }
+
+    .input-wrapper .form-control:focus+.input-icon,
+    .input-wrapper:focus-within .input-icon {
+        color: #22c55e;
+    }
+
+    /* Login button */
+    .btn-login {
+        width: 100%;
+        height: 54px;
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        border: none;
+        border-radius: 14px;
+        color: white;
+        font-weight: 600;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+        cursor: pointer;
+    }
+
+    .btn-login:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(34, 197, 94, 0.5);
+        background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+    }
+
+    .btn-login:active {
+        transform: translateY(0);
+    }
+
+    /* Checkbox */
+    .form-check {
+        margin: 24px 0;
+    }
+
+    .form-check-input {
+        width: 20px;
+        height: 20px;
+        border-radius: 6px;
+        border: 2px solid #cbd5e1;
+        cursor: pointer;
+    }
+
+    .form-check-input:checked {
+        background-color: #22c55e;
+        border-color: #22c55e;
+    }
+
+    .form-check-label {
+        color: #64748b;
+        margin-left: 8px;
+        cursor: pointer;
+    }
+
+    /* Mobile responsive */
+    @media (max-width: 480px) {
+        .login-card {
+            margin: 20px;
+            padding: 32px 24px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block auth_content %}
+<div class="login-page">
+    <div class="login-card">
+        <div class="login-logo">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="KOI MART">
+        </div>
+
+        <h1 class="login-title">Chào mừng trở lại!</h1>
+        <p class="login-subtitle">Đăng nhập để quản lý cửa hàng của bạn</p>
+
+        <form method="POST" action="{{ url_for('auth.login') }}">
+            <div class="form-group">
+                <label for="username">Tên đăng nhập</label>
+                <div class="input-wrapper">
+                    <input type="text" name="username" class="form-control" id="username"
+                        placeholder="Nhập tên đăng nhập" required autofocus autocomplete="username">
+                    <i class="bi bi-person input-icon"></i>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Mật khẩu</label>
+                <div class="input-wrapper">
+                    <input type="password" name="password" class="form-control" id="password"
+                        placeholder="Nhập mật khẩu" required autocomplete="current-password">
+                    <i class="bi bi-lock input-icon"></i>
+                </div>
+            </div>
+
+            <div class="form-check">
+                <input type="checkbox" name="remember" class="form-check-input" id="remember">
+                <label class="form-check-label" for="remember">Ghi nhớ đăng nhập</label>
+            </div>
+
+            <button type="submit" class="btn-login">
+                <i class="bi bi-box-arrow-in-right"></i>
+                Đăng nhập
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

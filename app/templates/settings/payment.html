@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}Thanh toán QR - KOI MART{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h4 class="mb-0">Cài đặt Thanh toán QR / Ngân hàng</h4>
+    <a href="{{ url_for('settings.index') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Quay lại
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-bank me-2"></i>Thông tin tài khoản ngân hàng
+            </div>
+            <div class="card-body">
+                <form method="POST" class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Tên ngân hàng <span class="text-danger">*</span></label>
+                        <select name="bank_name" class="form-select">
+                            <option value="Techcombank" {% if settings.get('bank_name')=='Techcombank' %}selected{%
+                                endif %}>Techcombank</option>
+                            <option value="Vietcombank" {% if settings.get('bank_name')=='Vietcombank' %}selected{%
+                                endif %}>Vietcombank</option>
+                            <option value="MB Bank" {% if settings.get('bank_name')=='MB Bank' %}selected{% endif %}>MB
+                                Bank</option>
+                            <option value="BIDV" {% if settings.get('bank_name')=='BIDV' %}selected{% endif %}>BIDV
+                            </option>
+                            <option value="Agribank" {% if settings.get('bank_name')=='Agribank' %}selected{% endif %}>
+                                Agribank</option>
+                            <option value="VPBank" {% if settings.get('bank_name')=='VPBank' %}selected{% endif %}>
+                                VPBank</option>
+                            <option value="ACB" {% if settings.get('bank_name')=='ACB' %}selected{% endif %}>ACB
+                            </option>
+                            <option value="Sacombank" {% if settings.get('bank_name')=='Sacombank' %}selected{% endif
+                                %}>Sacombank</option>
+                            <option value="TPBank" {% if settings.get('bank_name')=='TPBank' %}selected{% endif %}>
+                                TPBank</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Số tài khoản <span class="text-danger">*</span></label>
+                        <input type="text" name="bank_account" class="form-control"
+                            value="{{ settings.get('bank_account', '') }}" required placeholder="1234567890">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Tên chủ tài khoản <span class="text-danger">*</span></label>
+                        <input type="text" name="bank_account_name" class="form-control"
+                            value="{{ settings.get('bank_account_name', '') }}" required placeholder="NGUYEN VAN A">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Chi nhánh</label>
+                        <input type="text" name="bank_branch" class="form-control"
+                            value="{{ settings.get('bank_branch', '') }}" placeholder="Chi nhánh TP.HCM">
+                    </div>
+
+                    <div class="col-12">
+                        <hr>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i>Lưu thay đổi
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-qr-code me-2"></i>Xem trước QR thanh toán
+            </div>
+            <div class="card-body text-center">
+                {% if settings.get('bank_account') %}
+                <div class="p-3 bg-light rounded">
+                    <p class="mb-2">Quét mã để chuyển tiền đến</p>
+                    <h5 class="fw-bold text-uppercase">{{ settings.get('bank_account_name', 'KOI MART') }}</h5>
+                    <p class="text-muted">{{ settings.get('bank_account', '') }}</p>
+
+                    <img src="https://img.vietqr.io/image/{{ settings.get('bank_name', 'Techcombank') | lower | replace(' ', '') }}-{{ settings.get('bank_account', '') }}-compact.png"
+                        alt="QR Code" class="img-fluid" style="max-width: 200px;">
+
+                    <p class="mt-2 small text-muted">
+                        <i class="bi bi-info-circle"></i> QR được tạo qua VietQR
+                    </p>
+                </div>
+                {% else %}
+                <div class="text-muted py-5">
+                    <i class="bi bi-qr-code" style="font-size: 4rem;"></i>
+                    <p class="mt-2">Nhập thông tin tài khoản để xem QR</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="alert alert-info mt-3">
+            <i class="bi bi-lightbulb me-2"></i>
+            <strong>Hướng dẫn:</strong> QR thanh toán sẽ được tự động hiển thị trên hoá đơn in nhiệt khi khách hàng
+            thanh toán qua chuyển khoản.
+        </div>
+    </div>
+</div>
+{% endblock %}
