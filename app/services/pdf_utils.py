@@ -27,7 +27,7 @@ def generate_invoice_pdf(order, settings=None):
     """
     buffer = BytesIO()
     
-    # Register Fonts & Determine Usage
+    # Register Fonts & Determine Usage (Trigger Rebuild)
     from flask import current_app
     tt_font_dir = os.path.join(current_app.root_path, 'static', 'fonts')
     
