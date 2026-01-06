@@ -732,7 +732,9 @@
                 useBarCodeDetectorIfSupported: false
             },
             videoConstraints: {
-                facingMode: "environment"
+                facingMode: "environment",
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
             },
             formatsToSupport: [
                 Html5QrcodeSupportedFormats.EAN_13,
