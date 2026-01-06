@@ -221,17 +221,19 @@
         html5QrCode = new Html5Qrcode("barcode-reader");
 
         const config = {
-            fps: 10,
-            qrbox: { width: 250, height: 150 },
-            aspectRatio: 1.5,
+            fps: 15, // Tăng FPS để quét mượt hơn
+            qrbox: { width: 300, height: 100 }, // Khung chữ nhật dài phù hợp với mã vạch sản phẩm
+            aspectRatio: 1.0,
+            experimentalFeatures: {
+                useBarCodeDetectorIfSupported: true // Sử dụng BarcodeDetector native nếu có
+            },
             formatsToSupport: [
                 Html5QrcodeSupportedFormats.EAN_13,
                 Html5QrcodeSupportedFormats.EAN_8,
                 Html5QrcodeSupportedFormats.UPC_A,
                 Html5QrcodeSupportedFormats.UPC_E,
-                Html5QrcodeSupportedFormats.CODE_39,
                 Html5QrcodeSupportedFormats.CODE_128,
-                Html5QrcodeSupportedFormats.QR_CODE
+                Html5QrcodeSupportedFormats.CODE_39
             ]
         };
 
